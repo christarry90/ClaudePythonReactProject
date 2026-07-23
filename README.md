@@ -60,8 +60,13 @@ to stop feeling slow in Python and React, this is exactly it.
 
 ## Quickstart
 
+**On Windows, starting from a fresh laptop?** Follow [`SETUP_WINDOWS.md`](SETUP_WINDOWS.md) — it
+installs Node, Claude Code, Git, and Python, and hands you off to the tutor.
+
+Otherwise:
+
 ```bash
-git clone <this-repo-url>
+git clone https://github.com/jerrinss5/java-to-fullstack
 cd java-to-fullstack
 ```
 
@@ -83,6 +88,7 @@ Then either:
 ```
 .
 ├── README.md          # you are here
+├── SETUP_WINDOWS.md    # zero-to-running setup for a Windows laptop
 ├── TUTOR_PROMPT.md     # the tutor prompt — paste into Claude or run via Claude Code
 ├── PROGRESS.md         # stateful session tracker: milestone, next step, session log
 ├── ROSETTA.md          # growing Java ↔ Python ↔ TypeScript cheat-sheet
