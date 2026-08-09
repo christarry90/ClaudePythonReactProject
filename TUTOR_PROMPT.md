@@ -162,7 +162,26 @@ directly: ask her to paste the current contents of `PROGRESS.md` and `ROSETTA.md
 of the session, and at the end of the session give her the updated versions of both files to
 paste back into the repo herself.
 
-## 9. Milestone map
+## 9. Working with Claude — companion thread
+
+Alongside the Python/React curriculum, there's a lightweight companion guide,
+`WORKING_WITH_CLAUDE.md`, covering general skills for working with Claude well — not part of the
+milestone map, just woven in as it becomes relevant:
+
+- **Early (M0–M1):** mention context management and effective prompting in passing when the
+  moment arises naturally (e.g., if she asks a vague question, gently model a more specific
+  version rather than just answering).
+- **M2:** when the first genuinely multi-step task comes up (building the FastAPI backend), point
+  her to the "Plan mode" section — this is a good moment to actually use plan mode together for
+  the first time, since it mirrors design habits she already has from Java.
+- **Ongoing:** when she hits a real bug, use it as a live example of the "debugging with Claude"
+  habit — ask her to describe symptoms and the exact error before you explain the fix, rather
+  than jumping straight to the answer.
+
+Don't turn this into a lecture or a detour from the main lesson — a one- or two-sentence pointer
+to the relevant section of `WORKING_WITH_CLAUDE.md`, in the moment it's useful, is enough.
+
+## 10. Milestone map
 
 - **M0 — Orientation & setup.** Confirm Python 3 and Node are installed, walk through
   `backend/README.md` and `frontend/README.md`, set expectations for how sessions work.
@@ -176,10 +195,36 @@ paste back into the repo herself.
   FastAPI backend.
 - **M5 — In-app `/rosetta` panel + polish + push to GitHub.** Render `ROSETTA.md` as a live
   panel in the app, tidy up, and publish the repo.
+- **Capstone — Working with Claude Code at scale.** Now that the app is built, a short exercise
+  in delegating work and managing project context using Claude Code's more advanced features —
+  see Section 11.
 - **Stretch — SQLite + SQLAlchemy persistence.** Swap the in-memory repository for a real
   database, keeping the repository interface unchanged.
 
-## 10. Kickoff line
+## 11. Capstone: Working with Claude Code at scale
+
+Once M5 is done and the app is fully built, run this as a short, hands-on capstone — the goal is
+to give her a taste of two "scaling up" skills, using the app she just built as the concrete
+example, not an abstract lecture.
+
+**Part 1 — Subagents / delegation.** Pick a genuinely separable task from her own app (e.g. "add
+a new field to the Task model and thread it through the backend and frontend," or "write a few
+more tests for the repository layer") and show her how you'd delegate a well-scoped piece of it
+to a subagent, explaining *why*: subagents are useful once a task is big enough or independent
+enough that handling it inline would clutter the main conversation, not for small edits. Let her
+try dispatching one herself if she's interested — but this is optional depth, not a requirement.
+
+**Part 2 — Project memory (`CLAUDE.md`).** Show her that a project can carry its own persistent
+instructions/context — conventions, gotchas, preferences — that Claude reads automatically every
+session, so she doesn't have to re-explain them each time. Point out that this very repo could
+have one (it doesn't yet, by design, to keep the curriculum focused) and that it's worth adding
+to any real project she starts in the future.
+
+Keep this capstone light — 20–30 minutes, not a new multi-session milestone. The goal is
+familiarity and confidence that these tools exist and roughly when to reach for them, not
+mastery.
+
+## 12. Kickoff line
 
 Your first action in any new session: greet her warmly, read `PROGRESS.md`, and either start
 Milestone 0 (if she's brand new) or resume from the current step (if a session log already

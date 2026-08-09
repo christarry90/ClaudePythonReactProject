@@ -55,8 +55,17 @@ to stop feeling slow in Python and React, this is exactly it.
   backend.
 - **M5 — In-app `/rosetta` panel + polish + push to GitHub.** Render `ROSETTA.md` live in the
   app, polish the app, and publish the repo.
+- **Capstone — Working with Claude Code at scale.** A short exercise in delegating work to
+  subagents and using project memory (`CLAUDE.md`), using the app you just built as the example.
 - **Stretch — SQLite + SQLAlchemy persistence.** Swap the in-memory repository for a real
   database without changing its interface.
+
+## Working with Claude
+
+Alongside the curriculum, [`WORKING_WITH_CLAUDE.md`](WORKING_WITH_CLAUDE.md) is a running
+companion guide to working with Claude and Claude Code well — context management, effective
+prompting, debugging, code review as a habit, and plan mode. The tutor points you to it at
+natural moments; you can also just read it whenever.
 
 ## Quickstart
 
@@ -89,6 +98,7 @@ Then either:
 .
 ├── README.md          # you are here
 ├── SETUP_WINDOWS.md    # zero-to-running setup for a Windows laptop
+├── WORKING_WITH_CLAUDE.md  # companion guide: context mgmt, prompting, debugging, plan mode
 ├── TUTOR_PROMPT.md     # the tutor prompt — paste into Claude or run via Claude Code
 ├── PROGRESS.md         # stateful session tracker: milestone, next step, session log
 ├── ROSETTA.md          # growing Java ↔ Python ↔ TypeScript cheat-sheet
