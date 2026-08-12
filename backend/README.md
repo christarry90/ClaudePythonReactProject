@@ -20,4 +20,7 @@ pip install -r requirements.txt
 uvicorn app:app --reload
 ```
 
-Auto Swagger docs (like SpringDoc) at http://localhost:8000/docs
+Auto Swagger docs (like SpringDoc):
+- Local Windows setup: http://localhost:8000/docs
+- Browser-based environment: `https://<the-domain-you're-on>/proxy/8000/docs` (code-server proxies
+  the port for you — same idea as the frontend dev server, see `frontend/README.md`)
