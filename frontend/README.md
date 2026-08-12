@@ -40,14 +40,37 @@ export default defineConfig({
 })
 ```
 
-**Milestone 4 tip:** when you wire up the backend, point `fetch` calls at a relative path
-(`/api/...`) and add a dev proxy instead of hitting `http://localhost:8000` directly — it avoids
-CORS entirely and you never have to expose a second port:
+**Milestone 4 tip:** when you wire up the backend, add a dev proxy instead of hitting
+`http://localhost:8000` directly — it avoids CORS entirely and you never have to expose a second
+port. Because `base` isn't `/` in the browser-based environment, a plain `fetch('/api/tasks')`
+won't reach it (a leading `/` resolves from the domain root, not from your page's own path) — use
+`import.meta.env.BASE_URL` so the same code works in both environments, and give Vite a `rewrite`
+so the proxied request lands on the route your FastAPI app actually defines (e.g. `/tasks`, not
+`/api/tasks`):
 
 ```ts
-server: {
-  host: true,
-  allowedHosts: ['code.wakehub.org', 'code.home.wakehub.org'],
-  proxy: { '/api': 'http://localhost:8000' },
-},
+const base = '/absproxy/5173/'  // or '/' for the local Windows setup — same value as above
+
+export default defineConfig({
+  plugins: [react()],
+  base,
+  server: {
+    host: true,
+    allowedHosts: ['code.wakehub.org', 'code.home.wakehub.org'],
+    proxy: {
+      [base + 'api']: {
+        target: 'http://localhost:8000',
+        rewrite: (path) => path.replace(base + 'api', ''),
+      },
+    },
+  },
+})
 ```
+
+```ts
+// in your app code
+fetch(`${import.meta.env.BASE_URL}api/tasks`)
+```
+
+Verified end-to-end against this environment (full CRUD through the proxy chain) before you get
+here — this should just work.
