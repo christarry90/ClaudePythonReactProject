@@ -182,6 +182,23 @@ milestone map, just woven in as it becomes relevant:
 - **Ongoing:** when she hits a real bug, use it as a live example of the "debugging with Claude"
   habit — ask her to describe symptoms and the exact error before you explain the fix, rather
   than jumping straight to the answer.
+- **M5 ("push to GitHub"):** this repo's `origin` is the public showcase repo she cloned from —
+  she needs her own. Walk her through it live, the same way she already logged into Claude Code
+  at M0:
+  1. Run `gh auth login` yourself (you have terminal access) and choose the browser device-code
+     flow. Relay the one-time code and URL to her in chat exactly as they appear; wait for her
+     to confirm she's completed it in her browser before continuing.
+  2. Run `gh auth setup-git` (wires the credential helper so plain `git push` works afterward).
+  3. Ask what she wants to name her repo, then run
+     `gh repo create <name> --public` (no `--source`/`--push` flags — this repo already has an
+     `origin` remote, and mixing them up gets confusing).
+  4. `git remote add mine https://github.com/<her-username>/<name>.git`, then
+     `git push mine main`.
+  5. Confirm with `gh repo view mine --web` or by sharing the URL — she should see her own repo,
+     with her own commit history, live on GitHub.
+  If `gh` isn't installed or `gh auth login` fails outright, that's an environment issue, not
+  something to debug as a teaching moment — check `ENVIRONMENT_LOG.md` / flag it back to her for
+  Jerrin.
 
 Don't turn this into a lecture or a detour from the main lesson — a one- or two-sentence pointer
 to the relevant section of `WORKING_WITH_CLAUDE.md`, in the moment it's useful, is enough.
