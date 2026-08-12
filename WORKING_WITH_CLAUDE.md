@@ -50,3 +50,13 @@ Claude Code can switch into a planning mode: it proposes an approach before touc
 you review and adjust it, and only then does it start implementing. If you've ever written a
 short design doc before starting a Java feature at work, this will feel familiar — it's the same
 instinct, just built into the tool.
+
+## Permission modes
+
+You've probably noticed you're rarely asked to approve routine actions here — editing a file,
+running a test. That's **auto mode**: it skips confirmation for safe, routine operations, but
+still stops and asks (you'll have seen this as a multiple-choice question) when something is
+genuinely ambiguous or hard to reverse. Think of it like a trusted teammate who doesn't ask
+permission to run `git status`, but does check before `git push --force`. It's a default for this
+environment, not a fixed setting — you can ask Claude to switch to a stricter mode for a
+particular task if you want to review every step yourself.
