@@ -20,6 +20,15 @@ headroom). No further action needed on either — both confirmed fixed and verif
 **Last session covered:** M0, M1, and all of M2 (see earlier log entries — full CRUD FastAPI
 backend, complete).
 
+**Heads up for the tutor:** the original `backend/app.py` was lost to an infrastructure issue
+(container recreate wiped an unpersisted path) before it was ever committed. It's been
+reconstructed to match this file's session log exactly — same architecture (Task Pydantic
+model, TaskRepository, TaskService with constructor DI, the Depends()-per-request-vs-singleton-
+repository pattern), same endpoints, verified with a live CRUD smoke test. It was NOT retyped by
+Chris. Don't assume she has fresh muscle memory of it — when M4 needs the backend, do a quick
+verbal walkthrough of `backend/app.py` together first (2-3 minutes, not a full re-teach) so she
+can confirm it matches what she remembers building, before wiring the frontend to it.
+
 **Next action:** Start the real M3 content: tour
 `main.tsx`/`App.tsx`/`index.html` and connect them to the Spring Boot "bootstrap" mental model,
 then start building components, props, state, and a `Task` TypeScript interface — no backend
@@ -56,3 +65,7 @@ proxy config (host, allowedHosts, base path for this code-server environment's /
 routing) rather than app code; server confirmed correct via curl but browser still showed a
 blank page (likely stale cache, unconfirmed). Next: confirm the page actually loads, then start
 touring main.tsx/App.tsx and building components.
+2026-08-11 — Infra recovery: backend/app.py was lost (uncommitted, wiped by a container
+recreate) and has been reconstructed to match this log's description of M2 (Task model,
+TaskRepository, TaskService, full CRUD, Depends() DI). Verified working via CRUD smoke test.
+Chris did not retype it — tutor should walk through it with her briefly before M4 builds on it.
