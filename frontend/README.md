@@ -20,17 +20,19 @@ npm run dev
 
 **Browser-based environment (`code.wakehub.org` / `code.home.wakehub.org`):** the dev server
 runs inside the container, so `localhost:5173` means *your* laptop, not the container. Use the
-port-forwarding proxy code-server already gives you instead — either click the "Open in Browser"
-notification it pops up when it detects the port, or go directly to
-`https://<the-domain-you're-on>/proxy/5173/`.
+port-forwarding proxy code-server already gives you instead — go directly to
+`https://<the-domain-you're-on>/absproxy/5173/`.
 
-For that proxy URL to actually render the app (not a blank page or a "This host is not allowed"
-error), add this to `vite.config.ts` right after scaffolding, before your first `npm run dev`:
+Use `/absproxy/`, not the `/proxy/` path code-server's "Open in Browser" notification suggests —
+`/proxy/` strips the path prefix before forwarding to the dev server, but Vite needs to see its
+own base path in the incoming request or it redirect-loops. `/absproxy/` passes the path through
+unchanged instead. Add this to `vite.config.ts` right after scaffolding, before your first
+`npm run dev`:
 
 ```ts
 export default defineConfig({
   plugins: [react()],
-  base: '/proxy/5173/',
+  base: '/absproxy/5173/',
   server: {
     host: true,
     allowedHosts: ['code.wakehub.org', 'code.home.wakehub.org'],
