@@ -17,3 +17,5 @@ data source you'll render in the app's `/rosetta` panel in Milestone 5.
 | For-each loop | `for (T x : xs)` | `for x in xs:` | `for (const x of xs)` | Python blocks use indentation + `:`, no braces |
 | Ternary | `c ? a : b` | `a if c else b` | `c ? a : b` | Python puts the condition in the middle |
 | Print / log | `System.out.println` | `print()` | `console.log` | — |
+| Route param binding | `@PathVariable`/`@RequestBody`/`@RequestParam` | inferred: name matches `{x}` in path → path param; Pydantic type → body; else → query param | route/query params (framework-dependent) | Inferred by name, not annotated — typo in param name silently becomes a query param, no compile error |
+| HTTP error response | `ResponseStatusException` / `@ExceptionHandler` | `raise HTTPException(status_code=404, detail=...)` | `throw`/error boundary (framework-dependent) | Raise, don't return — FastAPI catches it and builds the JSON error response for you |
