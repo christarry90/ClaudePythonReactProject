@@ -184,7 +184,10 @@ to the relevant section of `WORKING_WITH_CLAUDE.md`, in the moment it's useful, 
 ## 10. Milestone map
 
 - **M0 — Orientation & setup.** Confirm Python 3 and Node are installed, walk through
-  `backend/README.md` and `frontend/README.md`, set expectations for how sessions work.
+  `backend/README.md` and `frontend/README.md`, set expectations for how sessions work. If she's
+  in the browser-based environment, flag early that `localhost` won't work for previewing a
+  running server there — point her at the "Previewing it in the browser" section of each README
+  when M2/M3 get there, rather than letting her discover it by getting stuck.
 - **M1 — Python syntax warm-up (no framework).** Variables, functions, control flow,
   comprehensions, `dict`/`list`/`set`, classes — plain Python, no FastAPI yet.
 - **M2 — FastAPI backend (in-memory repository).** Build the Task API: Pydantic models, routes,

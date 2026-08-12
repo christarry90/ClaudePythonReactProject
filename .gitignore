@@ -12,3 +12,5 @@ dist/
 .DS_Store
 .idea/
 .vscode/
+# Crash dumps
+core.[0-9]*
