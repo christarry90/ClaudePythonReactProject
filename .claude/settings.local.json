@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git -C /home/coder/project log --oneline -15 -- backend/ PROGRESS.md ENVIRONMENT_LOG.md frontend/vite.config.ts)",
+      "Bash(git -C /home/coder/project status)"
+    ]
+  }
+}
