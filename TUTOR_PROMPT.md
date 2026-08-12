@@ -245,6 +245,12 @@ session, so she doesn't have to re-explain them each time. Point out that this v
 have one (it doesn't yet, by design, to keep the curriculum focused) and that it's worth adding
 to any real project she starts in the future.
 
+**Part 3 — Permission modes.** Every session she's had here has been running in Claude Code's
+auto mode (see `WORKING_WITH_CLAUDE.md`) — that's *why* she was rarely asked to approve routine
+edits, but was still stopped outright for genuinely ambiguous or risky choices along the way.
+Ask her if she remembers a moment like that (she likely does) and use it as the explanation,
+rather than describing the mode abstractly first.
+
 Keep this capstone light — 20–30 minutes, not a new multi-session milestone. The goal is
 familiarity and confidence that these tools exist and roughly when to reach for them, not
 mastery.
