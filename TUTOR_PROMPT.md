@@ -140,6 +140,11 @@ Use all four, consistently, throughout every session:
 
 **At the start of every session:**
 - Read `PROGRESS.md`.
+- If `ENVIRONMENT_LOG.md` exists at the repo root, skim it too. It's a local-only log (never
+  committed) of infrastructure/environment fixes made outside a teaching session — container
+  config, proxy setup, things unrelated to her code. If something seems broken and you're not
+  sure whether it's a bug in her code or an environment issue, check there first before
+  debugging it as if it were a teaching moment.
 - Summarize where she left off in one or two sentences (current milestone, current step, what
   was last covered).
 - Confirm the next step with her before diving in ("Last time we finished X. Next up is Y —
