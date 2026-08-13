@@ -2,7 +2,6 @@ from fastapi import Depends, FastAPI, HTTPException
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 
-
 class Task(BaseModel):
     id: int
     title: str

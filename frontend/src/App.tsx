@@ -2,50 +2,71 @@ import TaskList from './TaskList';
 import type { Task } from './types';
 import {useState} from 'react';
 import AddTaskForm from './AddTaskForm';
+import { useEffect } from 'react';
 
 function App() {
-  const [tasks, setTasks] = useState<Task[]>([
-    {
-      id: '1',
-      title: 'Learn React',
-      completed: true,
-    },
-    {
-      id: '2',
-      title: 'Learn TypeScript',
-      completed: false,
-    },
-    {
-      id: '3',
-      title: 'Build a Todo App',
-      completed: false,
-    },
-  ]);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  useEffect(() => {
+    async function fetchTasks() {
+      try {
+        const response = await fetch('/proxy/8000/tasks');
 
-  function handleToggle(id: string) {
-  setTasks(
-    tasks.map((task) =>
-      task.id === id
-        ? { ...task, completed: !task.completed }
-        : task
-    )
-  );
+        if (!response.ok) {
+          throw new Error('Failed to fetch tasks');
+        }
+
+        const data: Task[] = await response.json();
+        setTasks(data);
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
+    fetchTasks();
+  }, []);
+
+
+  async function handleToggle(id: number) {
+    const task = tasks.find((t) => t.id === id)
+    const response = await fetch(`/proxy/8000/tasks/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json'},
+          body: JSON.stringify({completed: !task?.completed}),
+        })
+
+    const data: Task = await response.json();
+    setTasks((prev) => 
+      prev.map((t) =>
+        t.id === data.id ? data : t
+      )
+    );
 }
 
-function handleDelete(id: string){
-  setTasks(
+async function handleDelete(id: number){
+  const response = await fetch(`/proxy/8000/tasks/${id}`, {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json'},
+        })
+
+  if (response.ok) {
+    setTasks(
     tasks.filter((task) => task.id !== id)
-  );
+    );
+  }
+  
 }
 
-function handleAddTask(title: string){
-  const newTask: Task = {
-    id: crypto.randomUUID(),
-    title,
-    completed: false,
-  };
+async function handleAddTask(title: string){
+  const response = await fetch('/proxy/8000/tasks', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json'},
+          body: JSON.stringify({ title }),
+        })
 
-  setTasks((prevTasks) => [...prevTasks, newTask]);
+      
+  const data: Task = await response.json();
+
+  setTasks((prev) => [...prev, data]);
 }
 
   return (

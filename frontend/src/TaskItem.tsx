@@ -1,6 +1,6 @@
 import type { Task } from './types';
 
-export default function TaskItem({ task, onToggle, onDelete }: { task: Task; onToggle: (id: string) => void; onDelete: (id: string) => void; }) {
+export default function TaskItem({ task, onToggle, onDelete }: { task: Task; onToggle: (id: number) => void; onDelete: (id: number) => void; }) {
   return (
     <div>
       <h1>{task.title}</h1>

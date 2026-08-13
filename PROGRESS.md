@@ -4,37 +4,29 @@ The tutor (see `TUTOR_PROMPT.md`) reads this file at the start of every session 
 you are, and updates it at the end of every session. You're welcome to edit it yourself too —
 it's your progress, not a black box.
 
-**Current milestone:** M3 — React + TypeScript frontend (in progress)
+**Current milestone:** M4 — Wire frontend + backend (complete)
 
-**Current step:** Vite scaffold complete (`frontend/` has a working `react-ts` project),
-dev server confirmed rendering in the browser. Two separate issues fixed in
-`frontend/vite.config.ts`: `server.host: true` + `server.allowedHosts:
-['code.wakehub.org', 'code.home.wakehub.org']` (Vite's host-header protection, covering both
-URLs this environment is reachable on), and `base: '/absproxy/5173/'` — **not** `/proxy/5173/`,
-which redirect-loops for Vite specifically (code-server's `/proxy/` strips the path prefix
-before forwarding, but Vite needs to see it; `/absproxy/` passes it through unchanged). The
-earlier blank page was actually the code-server container running out of memory (VS Code +
-TypeScript + the dev server exceeded its old 2G limit), fixed infrastructure-side (more memory
-headroom). No further action needed on either — both confirmed fixed and verified working.
+**Current step:** Frontend is fully wired to the real FastAPI backend — no more local-only
+`useState` data. `useEffect` fetches tasks from the backend on mount; add/toggle/delete all make
+real `POST`/`PUT`/`DELETE` calls and update state from the server's response. CORS configured on
+the backend (`CORSMiddleware`, `allow_origins=["*"]`, no credentials). Fixed a real type bug along
+the way: `Task.id` was typed `string` in the frontend but the backend's Pydantic model uses
+`int` — corrected to `number` across `types.ts`, `App.tsx`, `TaskList.tsx`, `TaskItem.tsx`;
+`tsc --noEmit` clean. Full round trip (add/toggle/delete, then page reload) confirmed working —
+tasks persist server-side now, not just in React state.
 
-**Last session covered:** M0, M1, and all of M2 (see earlier log entries — full CRUD FastAPI
-backend, complete).
+**Environment note:** Neither dev server is persistent across sessions and both have died
+mid-session at least once this environment (memory pressure, not code issues — see
+`ENVIRONMENT_LOG.md`). Start both at the top of each session:
+- Backend: `cd backend && .venv/bin/uvicorn app:app --reload --host 0.0.0.0 --port 8000`
+- Frontend: `cd frontend && npm run dev`
+Frontend URL: `https://code.wakehub.org/absproxy/5173/` or `code.home.wakehub.org` (note
+`/absproxy/`, not `/proxy/`). Frontend's `fetch` calls target the backend via
+`/proxy/8000/...` (relative path — note `/proxy/`, not `/absproxy/`, since FastAPI's plain
+route paths need the prefix stripped before it reaches them, unlike Vite).
 
-**Heads up for the tutor:** the original `backend/app.py` was lost to an infrastructure issue
-(container recreate wiped an unpersisted path) before it was ever committed. It's been
-reconstructed to match this file's session log exactly — same architecture (Task Pydantic
-model, TaskRepository, TaskService with constructor DI, the Depends()-per-request-vs-singleton-
-repository pattern), same endpoints, verified with a live CRUD smoke test. It was NOT retyped by
-Chris. Don't assume she has fresh muscle memory of it — when M4 needs the backend, do a quick
-verbal walkthrough of `backend/app.py` together first (2-3 minutes, not a full re-teach) so she
-can confirm it matches what she remembers building, before wiring the frontend to it.
-
-**Next action:** M3 is fully complete, including optional polish (add-task form, delete button).
-Next session: M4 — wire the frontend to the real FastAPI backend with `fetch` calls (CORS, real
-CRUD replacing local `useState`). Do the quick `backend/app.py` walkthrough reminder is no longer
-needed (already done and confirmed 2026-08-12). Remind her the Vite dev server isn't persistent
-across sessions (`npm run dev` from `frontend/`), URL is `https://code.wakehub.org/absproxy/5173/`
-or `code.home.wakehub.org` (note `/absproxy/`, not `/proxy/`).
+**Next action:** M4 is complete. Next session: M5 — build the in-app `/rosetta` panel (rendering
+`ROSETTA.md`'s content in the app itself), general polish, then push to GitHub.
 
 ## Milestone checklist
 
@@ -44,7 +36,8 @@ or `code.home.wakehub.org` (note `/absproxy/`, not `/proxy/`).
 - [x] M3 — React + TypeScript frontend (complete: Task interface, TaskItem/TaskList
       components, props, list rendering w/ key, lifted state, toggle/add/delete all wired
       via callback props)
-- [ ] M4 — Wire frontend + backend (fetch, CORS, CRUD)
+- [x] M4 — Wire frontend + backend (fetch, CORS, CRUD — GET on mount, POST/PUT/DELETE all
+      round-trip through the real backend; id type mismatch (string vs int) caught and fixed)
 - [ ] M5 — In-app `/rosetta` panel + polish + push to GitHub
 - [ ] Capstone — Working with Claude Code at scale
 - [ ] Stretch — SQLite + SQLAlchemy persistence
@@ -94,3 +87,15 @@ TaskList to TaskItem). Introduced the functional-updater setState form
 (`setTasks((prev) => ...)`) as the safer default over reading state directly from closure. All
 three CRUD-like actions (toggle/add/delete) confirmed working live in browser. M3 fully complete.
 Next: M4 — wire fetch calls to the real FastAPI backend.
+2026-08-13 — M4 complete. Covered CORS (browser-enforced, not server-level) and fixed it on the
+backend with CORSMiddleware (caught a missing import and an invalid allow_origins=["*"] +
+allow_credentials=True combo along the way). Covered useEffect for mount-time fetching (empty
+dep array, async-inner-function pattern since the effect callback itself can't be async). Wired
+GET (load on mount), POST (add), PUT (toggle), and DELETE (delete) end-to-end against the real
+FastAPI backend, replacing all local-only state mutation — each took a few iterations to land
+(wrong HTTP verb, url template-literal quoting, request body shape, using the response to update
+state instead of the stale local computation). Caught a real type bug: Task.id was declared
+string in TS but the backend returns int; fixed across all four frontend files, tsc clean. Backend
+process died mid-session from environment memory pressure (twice) — restarted, not a code issue.
+Full round trip incl. page reload confirmed working (tasks persist server-side). Next: M5 — build
+the in-app /rosetta panel, polish, push to GitHub.
