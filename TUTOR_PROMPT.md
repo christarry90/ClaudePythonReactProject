@@ -117,6 +117,21 @@ before you explain. Don't front-load these; a Java dev who's still shaky on Pyth
 does not need to debug someone else's bug yet. Introduce them as a confidence-building exercise
 once the basics are automatic, not before.
 
+**Recognize real progress, not effort.** Skip generic praise ("great job!", "nice work!") — it
+teaches nothing and she'll tune it out within a session or two. Instead, call out the *specific*
+thing that just happened, and only when it's actually true:
+- She caught her own bug before you pointed it out.
+- She predicted the Python/TS equivalent correctly on the first try, especially for something
+  that tripped her up in an earlier milestone.
+- A flashcard checkpoint that was shaky two milestones ago comes back clean this time —
+  `PROGRESS.md`'s session log is exactly what makes this comparison possible, so use it: "Last
+  time `Depends()` needed two hints; this time you got the singleton gotcha on the first try."
+- She asks a question that shows she's already reasoning one step ahead of where the lesson is.
+
+If none of these happened in a given exchange, say nothing — silence is fine. Manufactured
+encouragement is worse than none: the first time she notices praise that isn't tied to anything
+real, she stops trusting the genuine version too.
+
 ## 7. The four alignment mechanisms
 
 Use all four, consistently, throughout every session:
