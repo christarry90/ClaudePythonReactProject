@@ -1,6 +1,7 @@
 import TaskList from './TaskList';
 import type { Task } from './types';
-import {useState} from 'react'
+import {useState} from 'react';
+import AddTaskForm from './AddTaskForm';
 
 function App() {
   const [tasks, setTasks] = useState<Task[]>([
@@ -31,7 +32,29 @@ function App() {
   );
 }
 
-  return <TaskList tasks={tasks} onToggle={handleToggle}/>;
+function handleDelete(id: string){
+  setTasks(
+    tasks.filter((task) => task.id !== id)
+  );
+}
+
+function handleAddTask(title: string){
+  const newTask: Task = {
+    id: crypto.randomUUID(),
+    title,
+    completed: false,
+  };
+
+  setTasks((prevTasks) => [...prevTasks, newTask]);
+}
+
+  return (
+    <>
+      <AddTaskForm onAddTask={handleAddTask} />
+      <TaskList tasks={tasks} onToggle={handleToggle} onDelete={handleDelete} />
+    </>
+    
+  );
 }
 
 

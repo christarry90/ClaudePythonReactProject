@@ -1,5 +1,6 @@
 from fastapi import Depends, FastAPI, HTTPException
 from pydantic import BaseModel
+from fastapi.middleware.cors import CORSMiddleware
 
 
 class Task(BaseModel):
@@ -89,6 +90,12 @@ def get_task_service() -> TaskService:
 
 app = FastAPI()
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.post("/tasks", response_model=Task, status_code=201)
 def create_task(task_create: TaskCreate, service: TaskService = Depends(get_task_service)):

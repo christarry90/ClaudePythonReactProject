@@ -29,23 +29,21 @@ Chris. Don't assume she has fresh muscle memory of it — when M4 needs the back
 verbal walkthrough of `backend/app.py` together first (2-3 minutes, not a full re-teach) so she
 can confirm it matches what she remembers building, before wiring the frontend to it.
 
-**Next action:** M3 core content is done (see session log). Two options for next session, her
-choice: (a) build optional extra UI polish — an "add task" form and a delete button — before
-M4, or (b) skip straight to M4 (wiring fetch calls to the real FastAPI backend) and let
-add/delete emerge naturally as real CRUD endpoints get wired up. Either way: remind her the Vite
-dev server isn't persistent across sessions (`npm run dev` from `frontend/`), URL is
-`https://code.wakehub.org/absproxy/5173/` or `code.home.wakehub.org` (note `/absproxy/`, not
-`/proxy/`). The `backend/app.py` regeneration decision from 2026-08-12 was resolved (walkthrough
-done, confirmed it matches her memory of M2) — no longer an open item.
+**Next action:** M3 is fully complete, including optional polish (add-task form, delete button).
+Next session: M4 — wire the frontend to the real FastAPI backend with `fetch` calls (CORS, real
+CRUD replacing local `useState`). Do the quick `backend/app.py` walkthrough reminder is no longer
+needed (already done and confirmed 2026-08-12). Remind her the Vite dev server isn't persistent
+across sessions (`npm run dev` from `frontend/`), URL is `https://code.wakehub.org/absproxy/5173/`
+or `code.home.wakehub.org` (note `/absproxy/`, not `/proxy/`).
 
 ## Milestone checklist
 
 - [x] M0 — Orientation & setup
 - [x] M1 — Python syntax warm-up (no framework)
 - [x] M2 — FastAPI backend (in-memory repository)
-- [x] M3 — React + TypeScript frontend (core done: Task interface, TaskItem/TaskList
-      components, props, list rendering w/ key, lifted state + callback toggle; optional
-      add/delete UI polish not yet built)
+- [x] M3 — React + TypeScript frontend (complete: Task interface, TaskItem/TaskList
+      components, props, list rendering w/ key, lifted state, toggle/add/delete all wired
+      via callback props)
 - [ ] M4 — Wire frontend + backend (fetch, CORS, CRUD)
 - [ ] M5 — In-app `/rosetta` panel + polish + push to GitHub
 - [ ] Capstone — Working with Claude Code at scale
@@ -89,3 +87,10 @@ TaskItem's button, closure/scoping bug caught along the way. Confirmed working l
 (toggle button flips completed state). Flashcard checkpoint 6/6 (one needed a directional
 clarify: closures were framed backwards but the concept was there). Next: her choice — optional
 add-task/delete UI polish, or skip straight to M4 (wiring fetch calls to the real backend).
+2026-08-13 — M3 optional polish: built AddTaskForm (local input state, controlled input,
+preventDefault, crypto.randomUUID() for new ids) and a delete button, both wired via the same
+lifted-state + callback-prop pattern (handleAddTask/handleDelete in App, threaded through
+TaskList to TaskItem). Introduced the functional-updater setState form
+(`setTasks((prev) => ...)`) as the safer default over reading state directly from closure. All
+three CRUD-like actions (toggle/add/delete) confirmed working live in browser. M3 fully complete.
+Next: M4 — wire fetch calls to the real FastAPI backend.
