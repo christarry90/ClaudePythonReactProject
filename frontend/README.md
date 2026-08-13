@@ -40,37 +40,22 @@ export default defineConfig({
 })
 ```
 
-**Milestone 4 tip:** when you wire up the backend, add a dev proxy instead of hitting
-`http://localhost:8000` directly — it avoids CORS entirely and you never have to expose a second
-port. Because `base` isn't `/` in the browser-based environment, a plain `fetch('/api/tasks')`
-won't reach it (a leading `/` resolves from the domain root, not from your page's own path) — use
-`import.meta.env.BASE_URL` so the same code works in both environments, and give Vite a `rewrite`
-so the proxied request lands on the route your FastAPI app actually defines (e.g. `/tasks`, not
-`/api/tasks`):
+**Milestone 4 tip:** point `fetch` calls straight at the backend — no Vite dev proxy needed here,
+unlike the frontend-access problem above. That's because FastAPI doesn't care about a `base`
+path the way Vite does, and in the browser-based environment the frontend
+(`/absproxy/5173/...`) and backend (`/proxy/8000/...`) are both proxied through the *same*
+origin (`code.wakehub.org`) — the browser sees that as same-origin, so CORS never even enters
+the picture there.
 
 ```ts
-const base = '/absproxy/5173/'  // or '/' for the local Windows setup — same value as above
+// Local Windows setup
+fetch('http://localhost:8000/tasks')
 
-export default defineConfig({
-  plugins: [react()],
-  base,
-  server: {
-    host: true,
-    allowedHosts: ['code.wakehub.org', 'code.home.wakehub.org'],
-    proxy: {
-      [base + 'api']: {
-        target: 'http://localhost:8000',
-        rewrite: (path) => path.replace(base + 'api', ''),
-      },
-    },
-  },
-})
+// Browser-based environment
+fetch('/proxy/8000/tasks')
 ```
 
-```ts
-// in your app code
-fetch(`${import.meta.env.BASE_URL}api/tasks`)
-```
-
-Verified end-to-end against this environment (full CRUD through the proxy chain) before you get
-here — this should just work.
+CORS only actually matters for the **local Windows setup**, where the frontend
+(`localhost:5173`) and backend (`localhost:8000`) are genuinely different origins — see
+`backend/README.md` for the `CORSMiddleware` you'll need there. Confirmed working end-to-end in
+the browser-based environment: full add/toggle/delete round trip, verified after a page reload.
