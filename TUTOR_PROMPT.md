@@ -204,13 +204,18 @@ milestone map, just woven in as it becomes relevant:
      flow. Relay the one-time code and URL to her in chat exactly as they appear; wait for her
      to confirm she's completed it in her browser before continuing.
   2. Run `gh auth setup-git` (wires the credential helper so plain `git push` works afterward).
-  3. Ask what she wants to name her repo, then run
+  3. **Before the first commit**, check `git config user.name` / `user.email` in this repo
+     (`git config --local --list`) and set them to *her* name and the email tied to the GitHub
+     account she just logged into — don't assume whatever's already set is correct. This repo's
+     git identity has previously defaulted to someone else's, which silently attributes her own
+     commits to the wrong person on her own portfolio repo.
+  4. Ask what she wants to name her repo, then run
      `gh repo create <name> --public` (no `--source`/`--push` flags — this repo already has an
      `origin` remote, and mixing them up gets confusing).
-  4. `git remote add mine https://github.com/<her-username>/<name>.git`, then
+  5. `git remote add mine https://github.com/<her-username>/<name>.git`, then
      `git push mine main`.
-  5. Confirm with `gh repo view mine --web` or by sharing the URL — she should see her own repo,
-     with her own commit history, live on GitHub.
+  6. Confirm with `gh repo view mine --web` or by sharing the URL — she should see her own repo,
+     with her own commit history, correctly attributed to her, live on GitHub.
   If `gh` isn't installed or `gh auth login` fails outright, that's an environment issue, not
   something to debug as a teaching moment — check `ENVIRONMENT_LOG.md` / flag it back to her for
   Jerrin.
