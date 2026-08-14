@@ -4,17 +4,21 @@ The tutor (see `TUTOR_PROMPT.md`) reads this file at the start of every session 
 you are, and updates it at the end of every session. You're welcome to edit it yourself too —
 it's your progress, not a black box.
 
-**Current milestone:** M5 — In-app `/rosetta` panel + polish + push to GitHub (in progress)
+**Current milestone:** M5 — In-app `/rosetta` panel + polish + push to GitHub (complete)
 
-**Current step:** Backend has a new `GET /readRosetta` endpoint (`ReadFile` Pydantic model,
-reads `ROSETTA.md` via `Path(__file__).parent.parent`, returns `{"content": "..."}"`). Frontend
-has a new `Rosetta.tsx` component that fetches it on mount and renders it with `react-markdown` +
-the `remark-gfm` plugin (needed for GFM table syntax — core markdown doesn't parse `| --- |`
-tables, only the gfm plugin does). `App.tsx` has a `showRosetta` boolean toggle button switching
-between the task view and `<Rosetta />`. Confirmed working live in browser — table renders
-properly, not raw markdown text. `tsc -b --noEmit` clean (note: plain `tsc --noEmit` silently
-no-ops on this project because of the `tsconfig.json` project-references setup — must use `-b`).
-Not yet done: general polish (toggle button copy, styling) and pushing to GitHub.
+**Current step:** Backend has a `GET /readRosetta` endpoint (`ReadFile` Pydantic model, reads
+`ROSETTA.md` via `Path(__file__).parent.parent`, returns `{"content": "..."}`). Frontend has a
+`Rosetta.tsx` component that fetches it on mount and renders it with `react-markdown` + the
+`remark-gfm` plugin (needed for GFM table syntax — core markdown doesn't parse `| --- |` tables).
+`App.tsx` has a `showRosetta` toggle button (dynamic label) switching between the task view and
+`<Rosetta />`, both wrapped in a styled `.app` container (`App.css` rewritten from scratch,
+replacing dead Vite boilerplate that was never even imported). `tsc -b --noEmit` clean (plain
+`tsc --noEmit` silently no-ops on this project due to the `tsconfig.json` project-references
+setup). Pushed to her own GitHub repo for the first time: authenticated via `gh auth login`
+(device code flow), created `christarry90/ClaudePythonReactProject`, added it as the `mine`
+remote, committed the styling changes, and pushed. Caught and fixed a commit-author-email mistake
+(amended + force-pushed to switch from jacob.jerrin@gmail.com to ckaduthanam@gmail.com — safe
+since it's her own fresh repo with no collaborators). Confirmed live on GitHub.
 
 **Environment note:** Neither dev server is persistent across sessions and both have died
 mid-session at least once this environment (memory pressure, not code issues — see
@@ -26,8 +30,8 @@ Frontend URL: `https://code.wakehub.org/absproxy/5173/` or `code.home.wakehub.or
 `/proxy/8000/...` (relative path — note `/proxy/`, not `/absproxy/`, since FastAPI's plain
 route paths need the prefix stripped before it reaches them, unlike Vite).
 
-**Next action:** Resume M5: general polish (toggle button labels, some basic styling), then
-`git add`/`commit`/push the whole project to GitHub for the first time.
+**Next action:** M5 is complete. Next session: her choice — Capstone (working with Claude Code
+at scale) or the SQLite/SQLAlchemy persistence stretch goal.
 
 ## Milestone checklist
 
@@ -39,7 +43,8 @@ route paths need the prefix stripped before it reaches them, unlike Vite).
       via callback props)
 - [x] M4 — Wire frontend + backend (fetch, CORS, CRUD — GET on mount, POST/PUT/DELETE all
       round-trip through the real backend; id type mismatch (string vs int) caught and fixed)
-- [ ] M5 — In-app `/rosetta` panel (done) + polish + push to GitHub (in progress)
+- [x] M5 — In-app `/rosetta` panel (react-markdown + remark-gfm) + styling polish + pushed to
+      her own GitHub repo (christarry90/ClaudePythonReactProject) for the first time
 - [ ] Capstone — Working with Claude Code at scale
 - [ ] Stretch — SQLite + SQLAlchemy persistence
 
@@ -112,3 +117,14 @@ include table syntax) — installed it, wired in, confirmed table renders correc
 learned plain `tsc --noEmit` silently no-ops on this project due to project references; `tsc -b
 --noEmit` is the real check. Toggle button in App.tsx switches between task view and rosetta view.
 Next: general polish (button copy, styling), then push to GitHub for the first time.
+2026-08-14 — M5 complete (resumed after lunch). Fixed the toggle button's static label with a
+ternary. Added basic styling: rewrote App.css from scratch (old file was dead Vite boilerplate,
+never imported — caught and fixed the missing `import './App.css'` too), caught a structural
+bug where `.add-task-form`'s flex rule was on a wrapper div instead of the form element itself
+so it never reached the input/button, and fixed an invalid `box-shadow: inset;` declaration.
+Then walked through her first GitHub push live: gh auth login (device code flow), gh repo create,
+added a second `mine` remote (this repo's `origin` is the public curriculum repo, not hers),
+committed, pushed. Caught a commit-authored-with-wrong-email mistake after the fact; fixed via
+amend --reset-author + force-push (safe, her own solo fresh repo). Confirmed live on GitHub:
+christarry90/ClaudePythonReactProject. Next: her choice — Capstone or the SQLite/SQLAlchemy
+stretch goal.
