@@ -4,6 +4,7 @@ import {useState} from 'react';
 import AddTaskForm from './AddTaskForm';
 import { useEffect } from 'react';
 import Rosetta from './Rosetta';
+import './App.css'
 
 function App() {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -73,22 +74,25 @@ async function handleAddTask(title: string){
 
   return (
     <>
-      <button onClick={() => setShowRosetta(!showRosetta)}>
-      Toggle View
-    </button>
+    <div className="app">
+      <button className="toggle-btn" onClick={() => setShowRosetta(!showRosetta)}>
+        {showRosetta ? 'View Tasks' : 'View Rosetta'}
+      </button>
 
-    {showRosetta ? (
-      <Rosetta />
-    ) : (
-      <>
-        <AddTaskForm onAddTask={handleAddTask} />
-        <TaskList
-          tasks={tasks}
-          onToggle={handleToggle}
-          onDelete={handleDelete}
-        />
-      </>
-    )}
+      {showRosetta ? (
+        <Rosetta />
+      ) : (
+        <>
+          <AddTaskForm onAddTask={handleAddTask} />
+          <TaskList
+            tasks={tasks}
+            onToggle={handleToggle}
+            onDelete={handleDelete}
+          />
+        </>
+      )}
+    </div>
+      
     </>
     
   );

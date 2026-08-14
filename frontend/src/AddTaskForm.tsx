@@ -17,7 +17,7 @@ function AddTaskForm({
   }
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form className="add-task-form" onSubmit={handleSubmit}>
       <input
         type="text"
         value={title}   
