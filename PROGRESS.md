@@ -4,16 +4,17 @@ The tutor (see `TUTOR_PROMPT.md`) reads this file at the start of every session 
 you are, and updates it at the end of every session. You're welcome to edit it yourself too —
 it's your progress, not a black box.
 
-**Current milestone:** M4 — Wire frontend + backend (complete)
+**Current milestone:** M5 — In-app `/rosetta` panel + polish + push to GitHub (in progress)
 
-**Current step:** Frontend is fully wired to the real FastAPI backend — no more local-only
-`useState` data. `useEffect` fetches tasks from the backend on mount; add/toggle/delete all make
-real `POST`/`PUT`/`DELETE` calls and update state from the server's response. CORS configured on
-the backend (`CORSMiddleware`, `allow_origins=["*"]`, no credentials). Fixed a real type bug along
-the way: `Task.id` was typed `string` in the frontend but the backend's Pydantic model uses
-`int` — corrected to `number` across `types.ts`, `App.tsx`, `TaskList.tsx`, `TaskItem.tsx`;
-`tsc --noEmit` clean. Full round trip (add/toggle/delete, then page reload) confirmed working —
-tasks persist server-side now, not just in React state.
+**Current step:** Backend has a new `GET /readRosetta` endpoint (`ReadFile` Pydantic model,
+reads `ROSETTA.md` via `Path(__file__).parent.parent`, returns `{"content": "..."}"`). Frontend
+has a new `Rosetta.tsx` component that fetches it on mount and renders it with `react-markdown` +
+the `remark-gfm` plugin (needed for GFM table syntax — core markdown doesn't parse `| --- |`
+tables, only the gfm plugin does). `App.tsx` has a `showRosetta` boolean toggle button switching
+between the task view and `<Rosetta />`. Confirmed working live in browser — table renders
+properly, not raw markdown text. `tsc -b --noEmit` clean (note: plain `tsc --noEmit` silently
+no-ops on this project because of the `tsconfig.json` project-references setup — must use `-b`).
+Not yet done: general polish (toggle button copy, styling) and pushing to GitHub.
 
 **Environment note:** Neither dev server is persistent across sessions and both have died
 mid-session at least once this environment (memory pressure, not code issues — see
@@ -25,8 +26,8 @@ Frontend URL: `https://code.wakehub.org/absproxy/5173/` or `code.home.wakehub.or
 `/proxy/8000/...` (relative path — note `/proxy/`, not `/absproxy/`, since FastAPI's plain
 route paths need the prefix stripped before it reaches them, unlike Vite).
 
-**Next action:** M4 is complete. Next session: M5 — build the in-app `/rosetta` panel (rendering
-`ROSETTA.md`'s content in the app itself), general polish, then push to GitHub.
+**Next action:** Resume M5: general polish (toggle button labels, some basic styling), then
+`git add`/`commit`/push the whole project to GitHub for the first time.
 
 ## Milestone checklist
 
@@ -38,7 +39,7 @@ route paths need the prefix stripped before it reaches them, unlike Vite).
       via callback props)
 - [x] M4 — Wire frontend + backend (fetch, CORS, CRUD — GET on mount, POST/PUT/DELETE all
       round-trip through the real backend; id type mismatch (string vs int) caught and fixed)
-- [ ] M5 — In-app `/rosetta` panel + polish + push to GitHub
+- [ ] M5 — In-app `/rosetta` panel (done) + polish + push to GitHub (in progress)
 - [ ] Capstone — Working with Claude Code at scale
 - [ ] Stretch — SQLite + SQLAlchemy persistence
 
@@ -99,3 +100,15 @@ string in TS but the backend returns int; fixed across all four frontend files, 
 process died mid-session from environment memory pressure (twice) — restarted, not a code issue.
 Full round trip incl. page reload confirmed working (tasks persist server-side). Next: M5 — build
 the in-app /rosetta panel, polish, push to GitHub.
+2026-08-14 — M5 kickoff (paused for lunch mid-milestone): built the in-app /rosetta panel.
+Backend: GET /readRosetta endpoint (new ReadFile Pydantic model, Path(__file__).parent.parent for
+a cwd-independent path to ROSETTA.md — caught a response_model mismatch and a bad path along the
+way). Frontend: chose react-markdown (her call, over hand-parsing the table) for Rosetta.tsx;
+several early draft bugs caught (invalid `function X() =`, no return statement, JSX built inside
+useEffect instead of returned from the component, `str` vs `string`, not unwrapping the
+`{content}` response shape, referencing the setter/effect-fn instead of state in JSX, mismatched
+import name vs JSX tag). Learned GFM tables need the remark-gfm plugin (core markdown spec doesn't
+include table syntax) — installed it, wired in, confirmed table renders correctly in browser. Also
+learned plain `tsc --noEmit` silently no-ops on this project due to project references; `tsc -b
+--noEmit` is the real check. Toggle button in App.tsx switches between task view and rosetta view.
+Next: general polish (button copy, styling), then push to GitHub for the first time.

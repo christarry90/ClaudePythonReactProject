@@ -1,6 +1,7 @@
 from fastapi import Depends, FastAPI, HTTPException
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
+from pathlib import Path
 
 class Task(BaseModel):
     id: int
@@ -16,6 +17,9 @@ class TaskCreate(BaseModel):
 class TaskUpdate(BaseModel):
     title: str | None = None
     completed: bool | None = None
+
+class ReadFile(BaseModel):
+    content: str
 
 
 class TaskRepository:
@@ -121,3 +125,14 @@ def update_task(
 @app.delete("/tasks/{task_id}", status_code=204)
 def delete_task(task_id: int, service: TaskService = Depends(get_task_service)):
     service.delete_task(task_id)
+
+
+@app.get("/readRosetta", response_model=ReadFile)
+def read_rosetta():
+    try:
+        with open(Path(__file__).parent.parent / "ROSETTA.md") as f:
+            text = f.read()
+        return {"content": text}
+
+    except FileNotFoundError:
+        raise HTTPException(status_code=404, detail="File not found")
