@@ -45,6 +45,7 @@ at scale) or the SQLite/SQLAlchemy persistence stretch goal.
       round-trip through the real backend; id type mismatch (string vs int) caught and fixed)
 - [x] M5 — In-app `/rosetta` panel (react-markdown + remark-gfm) + styling polish + pushed to
       her own GitHub repo (christarry90/ClaudePythonReactProject) for the first time
+- [ ] M6 — Containerize your app with Docker
 - [ ] Capstone — Working with Claude Code at scale
 - [ ] Stretch — SQLite + SQLAlchemy persistence
 

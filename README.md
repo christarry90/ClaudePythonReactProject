@@ -55,10 +55,19 @@ to stop feeling slow in Python and React, this is exactly it.
   backend.
 - **M5 — In-app `/rosetta` panel + polish + push to GitHub.** Render `ROSETTA.md` live in the
   app, polish the app, and publish the repo.
+- **M6 — Containerize your app with Docker.** Write Dockerfiles for the backend and frontend,
+  then a `docker-compose.yml` running both together, inside an isolated sandbox.
 - **Capstone — Working with Claude Code at scale.** A short exercise in delegating work to
   subagents and using project memory (`CLAUDE.md`), using the app you just built as the example.
 - **Stretch — SQLite + SQLAlchemy persistence.** Swap the in-memory repository for a real
   database without changing its interface.
+
+## After the course
+
+Once the milestones (and Capstone/stretch) are done, [`NEXT_STEPS.md`](NEXT_STEPS.md) is a menu
+of optional, parallel paths — extending the app, polishing the portfolio, interview prep with
+Claude, and going deeper on Docker plus a Kubernetes-awareness primer. Pick whichever is useful;
+none of it is required or sequential.
 
 ## Working with Claude
 
@@ -102,6 +111,7 @@ Then either:
 ├── TUTOR_PROMPT.md     # the tutor prompt — paste into Claude or run via Claude Code
 ├── PROGRESS.md         # stateful session tracker: milestone, next step, session log
 ├── ROSETTA.md          # growing Java ↔ Python ↔ TypeScript cheat-sheet
+├── NEXT_STEPS.md       # optional, parallel paths after the course: extend, polish, interview prep
 ├── backend/            # FastAPI app — built during M2 (starts empty on purpose)
 └── frontend/           # React + TypeScript app — built during M3 (starts empty on purpose)
 ```
