@@ -60,6 +60,12 @@ to stop feeling slow in Python and React, this is exactly it.
 - **Stretch — SQLite + SQLAlchemy persistence.** Swap the in-memory repository for a real
   database without changing its interface.
 
+## After the course
+
+Once the milestones (and Capstone/stretch) are done, [`NEXT_STEPS.md`](NEXT_STEPS.md) is a menu
+of optional, parallel paths — extending the app, polishing the portfolio, and interview prep with
+Claude. Pick whichever is useful; none of it is required or sequential.
+
 ## Working with Claude
 
 Alongside the curriculum, [`WORKING_WITH_CLAUDE.md`](WORKING_WITH_CLAUDE.md) is a running
@@ -102,6 +108,7 @@ Then either:
 ├── TUTOR_PROMPT.md     # the tutor prompt — paste into Claude or run via Claude Code
 ├── PROGRESS.md         # stateful session tracker: milestone, next step, session log
 ├── ROSETTA.md          # growing Java ↔ Python ↔ TypeScript cheat-sheet
+├── NEXT_STEPS.md       # optional, parallel paths after the course: extend, polish, interview prep
 ├── backend/            # FastAPI app — built during M2 (starts empty on purpose)
 └── frontend/           # React + TypeScript app — built during M3 (starts empty on purpose)
 ```
