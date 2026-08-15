@@ -299,10 +299,13 @@ them as a lecture):
 - A Docker network in `docker-compose.yml` ≈ configuring how two local Spring services find each
   other — how does the frontend know the backend's hostname/port.
 
-**When M6 wraps**, have her stop the sandbox so it's not left idling:
+**When M6 wraps**, have her stop the sandbox so it's not left idling — stop only the `dind`
+service by name, **not** a bare `docker compose --profile docker-lesson down`. That bare form
+tears down the *entire* stack, including `discord-bot` and `docker-control` (and `code-server`
+itself — this would disconnect her own session mid-lesson):
 
 ```bash
-docker compose --profile docker-lesson down
+docker compose --profile docker-lesson down dind
 ```
 
 Update `PROGRESS.md` the same as any other milestone (Section 8).
