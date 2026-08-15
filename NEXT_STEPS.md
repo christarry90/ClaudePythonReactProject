@@ -29,13 +29,27 @@ from scratch. Pick one, or do more than one, in any order.
   meaningfully harder than M3–M4.
 
 ### A3: Deploy it publicly
-- **What:** get the app live on a real URL — Railway/Render/Fly.io for the backend,
-  Vercel/Netlify for the frontend (or self-host, if you want to see how the homelab side of this
-  works).
-- **What it teaches:** environment config for prod vs. dev, CORS in a *real* cross-origin
-  deployment (it was a no-op in this browser-based environment — see `backend/README.md`), and a
-  build/deploy pipeline — genuinely new territory next to a Spring Boot deploy.
-- **Rough scope:** about a day, mostly config and troubleshooting rather than new code.
+- **What:** get the app live on a real URL. **Recommended route: the homelab** — containerize the
+  backend and frontend (a `Dockerfile` each, frontend served as a static build via nginx), add it
+  to a `docker-compose.yml` the same way every other service here works, and expose it through the
+  homelab's existing Cloudflare tunnel + Traefik setup — the same pattern that's serving *this
+  very environment* to you right now. No new accounts, no new platform to learn from scratch.
+  (Alternative if you'd rather not touch shared infra: Railway/Render/Fly.io for the backend,
+  Vercel/Netlify for the frontend — one-click PaaS deploys, simpler but a new account and a
+  platform-specific config format each.)
+- **What it teaches:** writing a production `Dockerfile` (not just running one someone else
+  wrote), environment config for prod vs. dev, CORS in a *real* cross-origin deployment (it was a
+  no-op in this browser-based environment — see `backend/README.md`) — and, on the homelab route
+  specifically, actual reverse-proxy + DNS routing (a Traefik router/service entry and a
+  Cloudflare hostname), which is closer to how a real company runs production than a PaaS "click
+  deploy" button is.
+- **Rough scope:** about a day, mostly config and troubleshooting once the app itself is
+  containerized (which is small).
+- **Heads up if you go the homelab route:** this touches shared host infrastructure other
+  services depend on — loop in Jerrin before exposing anything publicly, same as anyone else
+  adding a service to that network. The tutor here can help you write the `Dockerfile`s and
+  compose config, but the actual Traefik/Cloudflare wiring on the shared host is a "get sign-off
+  first" step, not something to do solo mid-lesson.
 - **Pick this if:** you want a live demo link for your resume/LinkedIn, not just a GitHub repo.
 
 ## Path B — Portfolio polish
