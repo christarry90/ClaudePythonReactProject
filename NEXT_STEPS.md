@@ -29,6 +29,9 @@ from scratch. Pick one, or do more than one, in any order.
   meaningfully harder than M3–M4.
 
 ### A3: Deploy it publicly
+- **Already got a head start:** if you did M6, you already have `backend/Dockerfile`,
+  `frontend/Dockerfile`, and a `docker-compose.yml` that runs both together — this path reuses
+  them as-is. You're adding the real Traefik/Cloudflare wiring on top, not starting over.
 - **What:** get the app live on a real URL. **Recommended route: the homelab** — containerize the
   backend and frontend (a `Dockerfile` each, frontend served as a static build via nginx), add it
   to a `docker-compose.yml` the same way every other service here works, and expose it through the
@@ -83,10 +86,48 @@ against Claude:
 - *"Give me a mock 'walk me through a project you built' interview question about this app, then
   interrupt me if I'm being vague or hand-wavy."*
 
+## Path D — Docker Advanced + a taste of Kubernetes
+
+Builds on M6 — do this after you've got the Dockerfiles/compose file working there. Two
+independent pieces; do one or both, in any order.
+
+### D1: Volumes / persistence
+- **What:** add a named volume (or bind mount) to the `docker-compose.yml` from M6 so data
+  survives `docker compose down` / `up`.
+  - If you did the SQLite stretch goal: persist the actual `.db` file.
+  - If not: a minimal, self-contained demo still teaches the concept — write a file inside the
+    running container, recreate the container, and watch the file disappear; add a volume,
+    recreate again, and watch it survive this time.
+- **What it teaches:** volumes vs. bind mounts vs. the container's own throwaway filesystem. You
+  already lived inside a bind mount for this entire course — this environment's `code-server`
+  container has your repo mounted in from the host the whole time — this exercise is that same
+  idea, made explicit and hands-on.
+
+### D2: Kubernetes — awareness, not hands-on here
+- **What:** a short conceptual mapping session with the tutor, same predict-then-reveal style as
+  the rest of the course, not a new milestone:
+  - **Pod** ≈ roughly one compose service's running instance.
+  - **Deployment** ≈ replica count + rollout management — genuinely new; `docker-compose` doesn't
+    really have an equivalent, since it doesn't manage replicas or rolling updates.
+  - **Service** ≈ stable networking/load-balancing across replicas — compose's default network
+    gives you a weaker version of this for a single instance.
+  - **ConfigMap / Secret** ≈ externalized `.env` values.
+  - **`kubectl`** ≈ the `docker` CLI's cluster-scale counterpart.
+- **Why not on the homelab:** the homelab is already memory-tight (this course fought that limit
+  more than once around M2–M4), and a real cluster control plane is a much bigger addition than
+  the isolated Docker sandbox M6 gave you — and more importantly, cluster-admin-equivalent access
+  is a materially bigger ask than anything else in this course. Not happening on shared infra.
+- **If you want to actually try it:** do it on your own laptop via `minikube` — not in this
+  environment, since `minikube` needs to run directly on your machine's OS, not inside a
+  container inside a container. If you want a guide, ask **local** Claude Code (running directly
+  on your laptop, not this browser tab) to walk you through installing `minikube` and deploying
+  this same app to it. This is a fully self-directed side quest — `PROGRESS.md` and
+  `TUTOR_PROMPT.md` won't track it, and that's fine.
+
 ## Coming back to this later
 
 If you pick a path from here, treat it the same way the core course worked: predict-then-reveal,
 you write every line, and — if you're back in this environment — `PROGRESS.md` and
-`TUTOR_PROMPT.md` still apply. Just tell the tutor which path (A1/A2/A3/B/C) you're starting, so
+`TUTOR_PROMPT.md` still apply. Just tell the tutor which path (A1/A2/A3/B/C/D) you're starting, so
 it can adjust its Socratic questions to match — the further you get from the guided milestones,
 the more the tutor should lean on "how would you approach this" rather than a fixed lesson plan.

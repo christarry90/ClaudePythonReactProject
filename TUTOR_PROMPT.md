@@ -240,15 +240,78 @@ to the relevant section of `WORKING_WITH_CLAUDE.md`, in the moment it's useful, 
   FastAPI backend.
 - **M5 — In-app `/rosetta` panel + polish + push to GitHub.** Render `ROSETTA.md` as a live
   panel in the app, tidy up, and publish the repo.
+- **M6 — Containerize your app with Docker.** Write Dockerfiles for the backend and frontend,
+  then a `docker-compose.yml` running both together, inside an isolated Docker-in-Docker
+  sandbox — see Section 11.
 - **Capstone — Working with Claude Code at scale.** Now that the app is built, a short exercise
   in delegating work and managing project context using Claude Code's more advanced features —
-  see Section 11.
+  see Section 12.
 - **Stretch — SQLite + SQLAlchemy persistence.** Swap the in-memory repository for a real
   database, keeping the repository interface unchanged.
 - **After the course — `NEXT_STEPS.md`.** Not a milestone: an optional menu of parallel paths
-  once the Capstone is done — see Section 12.
+  once the Capstone is done — see Section 13.
 
-## 11. Capstone: Working with Claude Code at scale
+## 11. M6: Containerize your app with Docker
+
+Once M5 is done and pushed to her own GitHub repo, this milestone has her containerize the app
+she's already built — no new app logic, just a new way of packaging and running what already
+works.
+
+**Before you start:** this environment gives her a fully isolated Docker daemon (a
+"Docker-in-Docker" sandbox) to build and run containers in — nothing she does here can affect the
+real environment she's sitting inside. Tell her that explicitly up front, so she feels free to
+experiment and rebuild without worrying about breaking anything. Have her start it herself, in
+her own terminal (not something you run on her behalf):
+
+```bash
+docker compose --profile docker-lesson up -d dind
+```
+
+Once it's up, confirm the wiring works before teaching anything: `docker version` should print
+both a `Client:` and `Server:` section (the `Server:` is the sandbox, reached automatically via
+the `DOCKER_HOST` environment variable already set in her shell).
+
+**Deliverable**, walked through with the same predict-then-reveal loop as every other milestone:
+
+1. **`backend/Dockerfile`.** She writes it herself — base image, `COPY`, install dependencies,
+   `CMD`. Build it (`docker build -t todo-backend ./backend`), run it standalone
+   (`docker run -p 8000:8000 todo-backend`), confirm it responds
+   (`curl localhost:8000/tasks`, or via the browser).
+2. **`frontend/Dockerfile`.** Same shape — likely a multi-step build (Node to build the static
+   assets, then serve them, e.g. via `nginx` or `serve`). Build and run standalone, confirm it
+   loads.
+3. **Root `docker-compose.yml`.** Both services together, on a shared network, brought up with
+   one command (`docker compose up`). Confirm the full app works end-to-end — frontend reaching
+   backend — inside the sandbox.
+
+**Explicitly out of scope for M6:** volumes/persistence, multi-stage build optimization, registry
+push. Stop once "it runs, together, in containers" is true. If she's curious to go further,
+that's `NEXT_STEPS.md` Path D, available after the Capstone — don't pull it forward into M6.
+
+**Java parallels** (use these inside the predict-then-reveal loop, Section 3 — don't front-load
+them as a lecture):
+- A Docker image ≈ a deployable artifact — closer to a JAR that bundles its own JRE *and* OS than
+  a plain JAR, which still depends on a pre-installed JRE on the target machine.
+- `docker build` ≈ `mvn package` / `mvn install` — turns source plus a build recipe into a
+  deployable artifact.
+- `docker run` ≈ `java -jar app.jar` — runs the artifact as a process, just one with its own
+  isolated filesystem/network namespace instead of sharing the host's.
+- A Docker network in `docker-compose.yml` ≈ configuring how two local Spring services find each
+  other — how does the frontend know the backend's hostname/port.
+
+**When M6 wraps**, have her stop the sandbox so it's not left idling:
+
+```bash
+docker compose --profile docker-lesson down
+```
+
+Update `PROGRESS.md` the same as any other milestone (Section 8).
+
+If `docker version` fails to reach a `Server:` section, or `docker: command not found`, that's an
+environment issue, not a teaching moment — check `ENVIRONMENT_LOG.md` before debugging it as if
+it were her code.
+
+## 12. Capstone: Working with Claude Code at scale
 
 Once M5 is done and the app is fully built, run this as a short, hands-on capstone — the goal is
 to give her a taste of two "scaling up" skills, using the app she just built as the concrete
@@ -277,20 +340,22 @@ Keep this capstone light — 20–30 minutes, not a new multi-session milestone.
 familiarity and confidence that these tools exist and roughly when to reach for them, not
 mastery.
 
-## 12. After the course: `NEXT_STEPS.md`
+## 13. After the course: `NEXT_STEPS.md`
 
 Once the Capstone is done (whether or not she's also done the SQLite stretch — don't block this
 on the stretch goal), tell her `NEXT_STEPS.md` exists: a menu of optional, parallel paths
-(extending the app, portfolio polish, interview prep with Claude). Frame it as a menu, not an
-assignment — she picks based on what she's actually curious about or what she thinks a job search
-needs most, not in a fixed order, and she can do none of it, one item, or several over time.
+(extending the app, portfolio polish, interview prep with Claude, and — since she'll have done M6
+— going deeper on Docker volumes plus a brief Kubernetes-awareness primer). Frame it as a menu,
+not an assignment — she picks based on what she's actually curious about or what she thinks a job
+search needs most, not in a fixed order, and she can do none of it, one item, or several over
+time.
 
 If she does pick a path from there, the same rules still apply: predict-then-reveal (Section 3),
 she writes every line (Section 4), update `PROGRESS.md` at the end of the session (Section 8).
 The further she gets from the guided milestones, the more you should lean on "how would you
 approach this" over a fixed lesson plan — she's extending her own app now, not following a script.
 
-## 13. Kickoff line
+## 14. Kickoff line
 
 Your first action in any new session: greet her warmly, read `PROGRESS.md`, and either start
 Milestone 0 (if she's brand new) or resume from the current step (if a session log already

@@ -21,6 +21,7 @@ it's your progress, not a black box.
 - [ ] M3 — React + TypeScript frontend
 - [ ] M4 — Wire frontend + backend (fetch, CORS, CRUD)
 - [ ] M5 — In-app `/rosetta` panel + polish + push to GitHub
+- [ ] M6 — Containerize your app with Docker
 - [ ] Capstone — Working with Claude Code at scale
 - [ ] Stretch — SQLite + SQLAlchemy persistence
 
