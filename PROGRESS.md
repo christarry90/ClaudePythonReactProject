@@ -4,21 +4,30 @@ The tutor (see `TUTOR_PROMPT.md`) reads this file at the start of every session 
 you are, and updates it at the end of every session. You're welcome to edit it yourself too —
 it's your progress, not a black box.
 
-**Current milestone:** M5 — In-app `/rosetta` panel + polish + push to GitHub (complete)
+**Current milestone:** M6 — Containerize your app with Docker (complete)
 
-**Current step:** Backend has a `GET /readRosetta` endpoint (`ReadFile` Pydantic model, reads
-`ROSETTA.md` via `Path(__file__).parent.parent`, returns `{"content": "..."}`). Frontend has a
-`Rosetta.tsx` component that fetches it on mount and renders it with `react-markdown` + the
-`remark-gfm` plugin (needed for GFM table syntax — core markdown doesn't parse `| --- |` tables).
-`App.tsx` has a `showRosetta` toggle button (dynamic label) switching between the task view and
-`<Rosetta />`, both wrapped in a styled `.app` container (`App.css` rewritten from scratch,
-replacing dead Vite boilerplate that was never even imported). `tsc -b --noEmit` clean (plain
-`tsc --noEmit` silently no-ops on this project due to the `tsconfig.json` project-references
-setup). Pushed to her own GitHub repo for the first time: authenticated via `gh auth login`
-(device code flow), created `christarry90/ClaudePythonReactProject`, added it as the `mine`
-remote, committed the styling changes, and pushed. Caught and fixed a commit-author-email mistake
-(amended + force-pushed to switch from jacob.jerrin@gmail.com to ckaduthanam@gmail.com — safe
-since it's her own fresh repo with no collaborators). Confirmed live on GitHub.
+**Current step:** Backend and frontend are both fully containerized. `backend/Dockerfile`
+(`python:3.11-slim`, copy `requirements.txt` + install before copying source for layer caching,
+`CMD` runs `uvicorn` without `--reload`) plus `backend/.dockerignore` (`.venv`, `__pycache__`).
+`frontend/Dockerfile` is a multi-stage build: stage 1 (`node:20 AS build`) runs `npm ci` +
+`npm run build`; stage 2 (`nginx:alpine`) copies the built `dist/` in via `COPY --from=build`,
+plus a custom `frontend/nginx.conf` copied to `/etc/nginx/conf.d/default.conf` that reverse-proxies
+`/proxy/8000/` to `http://backend:8000/` — needed because the frontend's `fetch` calls are
+hardcoded to that code-server-specific dev-proxy path, which means nothing outside code-server.
+Root `docker-compose.yml` defines `backend` (build `./backend`, port `8000:8000`) and `frontend`
+(build `./frontend`, port `8080:80`, `depends_on: backend`) — service name `backend` doubles as
+the DNS hostname nginx's `proxy_pass` resolves automatically inside the Compose network. Verified
+end-to-end via `docker compose up`: `curl dind:8080/proxy/8000/tasks` round-trips through nginx to
+the FastAPI backend and back. Flashcard checkpoint 4/4, no hints needed.
+
+**M6 environment note:** the Docker-in-Docker sandbox starts/stops via Discord (`docker on` /
+`docker off`), not a terminal `docker compose` command — see `ENVIRONMENT_LOG.md`. Also: her
+shell's `DOCKER_HOST` points at the remote `dind` daemon, so published container ports are only
+reachable via the `dind` hostname (e.g. `curl dind:8000/tasks`), **not** `localhost` — despite
+what `TUTOR_PROMPT.md`'s M6 section currently says (stale, flagged in `ENVIRONMENT_LOG.md`).
+
+**M5 recap:** In-app `/rosetta` panel (`react-markdown` + `remark-gfm`) + styling polish, and her
+first push to her own GitHub repo (`christarry90/ClaudePythonReactProject`).
 
 **Environment note:** Neither dev server is persistent across sessions and both have died
 mid-session at least once this environment (memory pressure, not code issues — see
@@ -30,7 +39,7 @@ Frontend URL: `https://code.wakehub.org/absproxy/5173/` or `code.home.wakehub.or
 `/proxy/8000/...` (relative path — note `/proxy/`, not `/absproxy/`, since FastAPI's plain
 route paths need the prefix stripped before it reaches them, unlike Vite).
 
-**Next action:** M5 is complete. Next session: her choice — Capstone (working with Claude Code
+**Next action:** M6 is complete. Next session: her choice — Capstone (working with Claude Code
 at scale) or the SQLite/SQLAlchemy persistence stretch goal.
 
 ## Milestone checklist
@@ -45,7 +54,8 @@ at scale) or the SQLite/SQLAlchemy persistence stretch goal.
       round-trip through the real backend; id type mismatch (string vs int) caught and fixed)
 - [x] M5 — In-app `/rosetta` panel (react-markdown + remark-gfm) + styling polish + pushed to
       her own GitHub repo (christarry90/ClaudePythonReactProject) for the first time
-- [ ] M6 — Containerize your app with Docker
+- [x] M6 — Containerize your app with Docker (backend + frontend Dockerfiles, multi-stage
+      frontend build, nginx reverse-proxy config, docker-compose.yml, verified end-to-end)
 - [ ] Capstone — Working with Claude Code at scale
 - [ ] Stretch — SQLite + SQLAlchemy persistence
 
@@ -129,3 +139,20 @@ committed, pushed. Caught a commit-authored-with-wrong-email mistake after the f
 amend --reset-author + force-push (safe, her own solo fresh repo). Confirmed live on GitHub:
 christarry90/ClaudePythonReactProject. Next: her choice — Capstone or the SQLite/SQLAlchemy
 stretch goal.
+2026-08-17 — M6 complete (her choice over Capstone/stretch). Hit an environment blocker first:
+the Docker-in-Docker sandbox's compose file isn't reachable from inside code-server at all
+(flagged, then fixed by Jerrin mid-session — sandbox now starts via Discord `docker on`/`docker
+off`). Built `backend/Dockerfile` (base image, WORKDIR, copy-then-install layering for cache
+efficiency, RUN vs CMD distinction caught cleanly) and `backend/.dockerignore` after catching a
+`.venv` bloat issue during the first build. Built `frontend/Dockerfile` as a multi-stage build
+(Node build stage + nginx serve stage, `COPY --from=`) — caught a `COPY` multi-source trailing-
+slash requirement, a wrong `COPY` destination, and a filename typo along the way. Diagnosed that
+the frontend's hardcoded `/proxy/8000/` fetch paths (code-server-specific) wouldn't work outside
+code-server, and fixed it with a `frontend/nginx.conf` reverse-proxying to the backend by Compose
+service name — a real architecture problem, not scripted busywork. Wrote `docker-compose.yml`
+(several iterations on YAML nesting/service-naming mixups: service name must match the nginx
+proxy target, `container_name` vs. service-key confusion, absolute vs. relative build paths).
+Hit and correctly diagnosed a second environment issue (published ports reachable via the `dind`
+hostname, not `localhost`, due to the remote `DOCKER_HOST` — logged, not a real bug). Verified
+the full stack end-to-end. Flashcard checkpoint 4/4 clean, no hints. Next: her choice — Capstone
+or the SQLite/SQLAlchemy stretch goal.
