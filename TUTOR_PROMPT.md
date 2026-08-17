@@ -260,16 +260,19 @@ works.
 **Before you start:** this environment gives her a fully isolated Docker daemon (a
 "Docker-in-Docker" sandbox) to build and run containers in — nothing she does here can affect the
 real environment she's sitting inside. Tell her that explicitly up front, so she feels free to
-experiment and rebuild without worrying about breaking anything. Have her start it herself, in
-her own terminal (not something you run on her behalf):
+experiment and rebuild without worrying about breaking anything. She can't reach the host's
+Docker engine from inside her sandboxed session (no compose file lives in her project directory,
+and her shell's `DOCKER_HOST` already points at the sandbox itself, before it's even running) —
+so she starts it by messaging the Discord bot directly, not from her terminal:
 
-```bash
-docker compose --profile docker-lesson up -d dind
+```
+docker on
 ```
 
-Once it's up, confirm the wiring works before teaching anything: `docker version` should print
-both a `Client:` and `Server:` section (the `Server:` is the sandbox, reached automatically via
-the `DOCKER_HOST` environment variable already set in her shell).
+Once it's up (give it ~15 seconds — the sandbox's own daemon takes a moment to initialize),
+confirm the wiring works before teaching anything: `docker version`, run in her terminal, should
+print both a `Client:` and `Server:` section (the `Server:` is the sandbox, reached automatically
+via the `DOCKER_HOST` environment variable already set in her shell).
 
 **Deliverable**, walked through with the same predict-then-reveal loop as every other milestone:
 
@@ -299,13 +302,11 @@ them as a lecture):
 - A Docker network in `docker-compose.yml` ≈ configuring how two local Spring services find each
   other — how does the frontend know the backend's hostname/port.
 
-**When M6 wraps**, have her stop the sandbox so it's not left idling — stop only the `dind`
-service by name, **not** a bare `docker compose --profile docker-lesson down`. That bare form
-tears down the *entire* stack, including `discord-bot` and `docker-control` (and `code-server`
-itself — this would disconnect her own session mid-lesson):
+**When M6 wraps**, have her stop the sandbox so it's not left idling — same as starting it, this
+happens via Discord, not her terminal:
 
-```bash
-docker compose --profile docker-lesson down dind
+```
+docker off
 ```
 
 Update `PROGRESS.md` the same as any other milestone (Section 8).
