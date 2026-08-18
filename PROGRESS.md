@@ -4,21 +4,40 @@ The tutor (see `TUTOR_PROMPT.md`) reads this file at the start of every session 
 you are, and updates it at the end of every session. You're welcome to edit it yourself too —
 it's your progress, not a black box.
 
-**Current milestone:** Capstone — Working with Claude Code at scale (complete)
+**Current milestone:** NEXT_STEPS Path A2 — Tags (many-to-many) on Tasks (in progress)
 
-**Current step:** Backend and frontend are both fully containerized. `backend/Dockerfile`
-(`python:3.11-slim`, copy `requirements.txt` + install before copying source for layer caching,
-`CMD` runs `uvicorn` without `--reload`) plus `backend/.dockerignore` (`.venv`, `__pycache__`).
-`frontend/Dockerfile` is a multi-stage build: stage 1 (`node:20 AS build`) runs `npm ci` +
-`npm run build`; stage 2 (`nginx:alpine`) copies the built `dist/` in via `COPY --from=build`,
-plus a custom `frontend/nginx.conf` copied to `/etc/nginx/conf.d/default.conf` that reverse-proxies
-`/proxy/8000/` to `http://backend:8000/` — needed because the frontend's `fetch` calls are
-hardcoded to that code-server-specific dev-proxy path, which means nothing outside code-server.
-Root `docker-compose.yml` defines `backend` (build `./backend`, port `8000:8000`) and `frontend`
-(build `./frontend`, port `8080:80`, `depends_on: backend`) — service name `backend` doubles as
-the DNS hostname nginx's `proxy_pass` resolves automatically inside the Compose network. Verified
-end-to-end via `docker compose up`: `curl dind:8080/proxy/8000/tasks` round-trips through nginx to
-the FastAPI backend and back. Flashcard checkpoint 4/4, no hints needed.
+**Current step:** Building NEXT_STEPS Path A2 (Tags, many-to-many) on `backend/app.py`. She chose
+Tags over Projects specifically because she correctly identified it as the harder relational-
+modeling problem (no join table in a plain `dict`-backed repository). Correctly reasoned through
+the JPA `@ManyToMany` comparison unaided (auto-generated join table, hydrated objects back) and
+decided the join table needs its own repository (`TaskTagRepository`), not bolted onto
+`TaskRepository`/`TagRepository`, since it doesn't belong to either resource alone — same
+reasoning as a dedicated join-entity repository in Spring. Built so far, all in `backend/app.py`:
+`Tag`/`TagCreate`/`TagUpdate` Pydantic models, `TagRepository` (mirrors `TaskRepository`'s shape),
+and `TaskTagRepository` (hand-rolled join table: `dict[int, set[int]]`, `add_tag`/`remove_tag`/
+`get_tags_for_task`). Two real bugs caught and self-fixed along the way: the `self`-omission
+gotcha recurred on two later methods after being fixed on the first one (worth watching for again
+next session), and a genuine logic bug in `remove_tag` (`del self._task_tags[task_id]` deleted the
+whole task's tag set instead of removing one tag via `.discard(tag_id)`). Backend imports clean.
+**Not yet built:** the harder part — `TaskService` composing across all three repositories so
+`GET /tasks` returns each task with nested `Tag` objects (not raw ids), matching the JPA
+hydration behavior she named; new `/tags` routes; frontend `Tag` type, nested `tags: Tag[]` on
+`Task`, and UI to attach/detach tags (flagged in NEXT_STEPS.md as "a list of lists" — a genuinely
+harder React state shape than anything in M3–M4). Also still open: whether `Tag` deletion should
+cascade/clean up `TaskTagRepository` entries — she correctly placed that responsibility at the
+service layer (the only layer that knows about both repositories) but it isn't implemented yet.
+
+**M6 recap:** Backend and frontend fully containerized (`backend/Dockerfile`, `frontend/Dockerfile`
+multi-stage build, `frontend/nginx.conf` reverse-proxying `/proxy/8000/` to `backend:8000`,
+root `docker-compose.yml`). Verified end-to-end via `docker compose up`. Flashcard 4/4.
+
+**Capstone recap:** Delegated the `priority` field (Task model, backend + frontend) to a
+subagent with a scoped, self-contained prompt; it caught a real bug (`TaskRepository.add()`
+silently dropping `task_create.priority`) rather than overstepping its "don't touch
+TaskRepository" instruction, and she fixed the one-line omission herself. Created the repo's
+first `CLAUDE.md` entry (`/absproxy/` vs `/proxy/` Vite gotcha). Covered permission-mode
+calibration (reversibility + blast radius, not "how scary it looks") using the real M5
+force-push-to-her-own-repo example.
 
 **M6 environment note:** the Docker-in-Docker sandbox starts/stops via Discord (`docker on` /
 `docker off`), not a terminal `docker compose` command — see `ENVIRONMENT_LOG.md`. Also: her
@@ -39,9 +58,11 @@ Frontend URL: `https://code.wakehub.org/absproxy/5173/` or `code.home.wakehub.or
 `/proxy/8000/...` (relative path — note `/proxy/`, not `/absproxy/`, since FastAPI's plain
 route paths need the prefix stripped before it reaches them, unlike Vite).
 
-**Next action:** Capstone is complete. Course milestones are done. `NEXT_STEPS.md` now applies —
-her choice, any time: extend the app, portfolio polish, interview prep, Docker volumes/K8s
-primer, or the SQLite/SQLAlchemy persistence stretch goal.
+**Next action:** Resume NEXT_STEPS Path A2 (Tags) mid-feature: build `TaskService` composition
+across `TaskRepository`/`TagRepository`/`TaskTagRepository` so responses include nested `Tag`
+objects, then `/tags` routes, then the frontend (types, nested list rendering, attach/detach UI).
+Course milestones + Capstone are otherwise fully done — `NEXT_STEPS.md`'s other paths (A1 auth,
+A3 deploy, B portfolio polish, C interview prep, D Docker/K8s) remain open any time after A2.
 
 ## Milestone checklist
 
@@ -175,3 +196,18 @@ and the branch-protection hook that hard-blocks origin/main but allows her mine 
 milestones are now fully complete. Next: her choice, any time — NEXT_STEPS.md menu (app
 extension, portfolio polish, interview prep, Docker volumes/K8s primer) or the SQLite/SQLAlchemy
 stretch goal.
+2026-08-18 (cont'd) — Started NEXT_STEPS Path A2 (Tags, many-to-many), her pick from Path A after
+choosing it over auth/deploy. Correctly reasoned unaided that Tags (not Projects) was the harder
+option because there's no join table in a plain dict-backed repository, and correctly mapped JPA's
+`@ManyToMany` (auto-generated join table, hydrated objects) to what we'd have to hand-roll instead.
+Correctly placed the join table in its own `TaskTagRepository`, not bolted onto `TaskRepository`/
+`TagRepository`. Built `Tag`/`TagCreate`/`TagUpdate` models and `TagRepository` (mirrored
+`TaskRepository` cleanly, one naming nudge: renamed `Tag.title` to `.name`). `TaskTagRepository`
+took more iterations: missed `self` on `add_tag` initially (fixed), then the same `self` omission
+recurred on `remove_tag`/`get_tags_for_task` right after (fixed again — flagging this as a pattern
+to watch for next session, not just a one-off), plus a real logic bug in `remove_tag` (`del
+self._task_tags[task_id]` deleted the whole task's tag set instead of removing one tag via
+`.discard(tag_id)` — walked through a concrete trace to find it, then fixed correctly). Added a
+new ROSETTA.md row (many-to-many / hand-rolled join table vs `@ManyToMany`). Backend imports
+clean; stopped before the harder part (TaskService composition across three repositories, /tags
+routes, frontend). Next: resume mid-feature — see "Current step" above.

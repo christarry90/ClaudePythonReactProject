@@ -106,14 +106,15 @@ class TaskTagRepository:
         
         self._task_tags[task_id].add(tag_id)
 
-    def remove_tag(task_id, tag_id) -> bool:
+    def remove_tag(self, task_id, tag_id) -> bool:
         if task_id not in self._task_tags:
             return False
-        del self._task_tags[task_id]
+        self._task_tags[task_id].discard(tag_id)
+        return True
 
-    def get_tags_for_task(task_id) -> None:
+    def get_tags_for_task(self, task_id) -> set[int] | None:
         if task_id not in self._task_tags:
-            
+            return None
         return self._task_tags[task_id]
 
 class TaskService:
