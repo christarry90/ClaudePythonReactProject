@@ -16,15 +16,23 @@ class TaskCreate(BaseModel):
     completed: bool = False
     priority: Literal["low", "medium", "high"] = "medium"
 
+class Tag(BaseModel):
+    id: int
+    name: str
+
+class TagCreate(BaseModel):
+    name: str
 
 class TaskUpdate(BaseModel):
     title: str | None = None
     completed: bool | None = None
     priority: Literal["low", "medium", "high"] | None = None
 
+class TagUpdate(BaseModel):
+    name: str | None = None
+
 class ReadFile(BaseModel):
     content: str
-
 
 class TaskRepository:
     def __init__(self):
@@ -57,6 +65,39 @@ class TaskRepository:
         del self._tasks[task_id]
         return True
 
+class TagRepository:
+    def __init__(self):
+        self._tags: dict[int, Tag] = {}
+        self._next_id = 1
+
+    def add(self, tag_create: TagCreate) -> Tag:
+        tag = Tag(id=self._next_id, name=tag_create.name)
+        self._tags[tag.id] = tag
+        self._next_id += 1
+        return tag
+
+    def get(self, tag_id: int) -> Tag | None:
+        return self._tags.get(tag_id)
+
+    def list(self) -> list[Tag]:
+        return list(self._tags.values())
+
+    def update(self, tag_id: int, tag_update: TagUpdate) -> Tag | None:
+        tag = self._tags.get(tag_id)
+        if tag is None:
+            return None
+        updated = tag.model_copy(update=tag_update.model_dump(exclude_unset=True))
+        self._tags[tag_id] = updated
+        return updated
+
+    def delete(self, tag_id: int) -> bool:
+        if tag_id not in self._tags:
+            return False
+        del self._tags[tag_id]
+        return True
+
+class TaskTagRepository:
+    def add_tag(task_id, tag_id):
 
 class TaskService:
     def __init__(self, repository: TaskRepository):

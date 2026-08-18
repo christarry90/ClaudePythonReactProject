@@ -1,0 +1,1 @@
+Use /absproxy/ not /proxy/ in vite.config.ts base path for the Vite dev server or it redirect-loops

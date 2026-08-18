@@ -4,7 +4,7 @@ The tutor (see `TUTOR_PROMPT.md`) reads this file at the start of every session 
 you are, and updates it at the end of every session. You're welcome to edit it yourself too —
 it's your progress, not a black box.
 
-**Current milestone:** M6 — Containerize your app with Docker (complete)
+**Current milestone:** Capstone — Working with Claude Code at scale (complete)
 
 **Current step:** Backend and frontend are both fully containerized. `backend/Dockerfile`
 (`python:3.11-slim`, copy `requirements.txt` + install before copying source for layer caching,
@@ -39,8 +39,9 @@ Frontend URL: `https://code.wakehub.org/absproxy/5173/` or `code.home.wakehub.or
 `/proxy/8000/...` (relative path — note `/proxy/`, not `/absproxy/`, since FastAPI's plain
 route paths need the prefix stripped before it reaches them, unlike Vite).
 
-**Next action:** M6 is complete. Next session: her choice — Capstone (working with Claude Code
-at scale) or the SQLite/SQLAlchemy persistence stretch goal.
+**Next action:** Capstone is complete. Course milestones are done. `NEXT_STEPS.md` now applies —
+her choice, any time: extend the app, portfolio polish, interview prep, Docker volumes/K8s
+primer, or the SQLite/SQLAlchemy persistence stretch goal.
 
 ## Milestone checklist
 
@@ -56,7 +57,8 @@ at scale) or the SQLite/SQLAlchemy persistence stretch goal.
       her own GitHub repo (christarry90/ClaudePythonReactProject) for the first time
 - [x] M6 — Containerize your app with Docker (backend + frontend Dockerfiles, multi-stage
       frontend build, nginx reverse-proxy config, docker-compose.yml, verified end-to-end)
-- [ ] Capstone — Working with Claude Code at scale
+- [x] Capstone — Working with Claude Code at scale (delegated a subagent to add a `priority`
+      field end-to-end, created first `CLAUDE.md` entry, covered permission-mode calibration)
 - [ ] Stretch — SQLite + SQLAlchemy persistence
 
 ## Session log
@@ -156,3 +158,20 @@ Hit and correctly diagnosed a second environment issue (published ports reachabl
 hostname, not `localhost`, due to the remote `DOCKER_HOST` — logged, not a real bug). Verified
 the full stack end-to-end. Flashcard checkpoint 4/4 clean, no hints. Next: her choice — Capstone
 or the SQLite/SQLAlchemy stretch goal.
+2026-08-18 — Capstone complete (her choice). Part 1 (subagents): delegated adding a `priority`
+field across backend + frontend to a general-purpose subagent, with a scoped, self-contained
+prompt (exact file paths, exact type, explicit "verify this assumption" instruction). Subagent
+caught a real bug I'd told it not to fix — TaskRepository.add() built Task by named fields and
+silently dropped task_create.priority — flagged it instead of overstepping scope; she fixed the
+one-line omission herself and correctly explained why add() needed it but update() didn't
+(explicit field construction vs. generic model_dump(exclude_unset=True)). Verified live in
+browser, then committed locally. Part 2 (CLAUDE.md): created the repo's first CLAUDE.md entry
+(the /absproxy/ vs /proxy/ Vite gotcha) — first draft was correct but missing the "where"
+(vite.config.ts), self-corrected on one nudge. Part 3 (permission modes): she initially
+misremembered PROGRESS.md edits as a confirm-point (they're not — routine local edits are
+auto-mode); correctly named the M5 git push. Walked through the actual distinction (reversibility
++ blast radius, not "how scary it looks") using the real M5 force-push-to-her-own-repo example
+and the branch-protection hook that hard-blocks origin/main but allows her mine remote. Course
+milestones are now fully complete. Next: her choice, any time — NEXT_STEPS.md menu (app
+extension, portfolio polish, interview prep, Docker volumes/K8s primer) or the SQLite/SQLAlchemy
+stretch goal.
