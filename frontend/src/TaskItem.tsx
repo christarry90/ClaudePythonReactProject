@@ -4,6 +4,7 @@ export default function TaskItem({ task, onToggle, onDelete }: { task: Task; onT
   return (
     <div className="task-item">
       <h1>{task.title}</h1>
+      <h2>{task.priority}</h2>
       <h2>{String(task.completed)}</h2>
       <button onClick={() => onToggle(task.id)}>Change State</button>
       <button onClick={() => onDelete(task.id)}>Delete</button>

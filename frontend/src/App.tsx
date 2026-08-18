@@ -59,11 +59,11 @@ async function handleDelete(id: number){
   
 }
 
-async function handleAddTask(title: string){
+async function handleAddTask(title: string, priority: 'low' | 'medium' | 'high'){
   const response = await fetch('/proxy/8000/tasks', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json'},
-          body: JSON.stringify({ title }),
+          body: JSON.stringify({ title, priority }),
         })
 
       

@@ -1,3 +1,4 @@
+from typing import Literal
 from fastapi import Depends, FastAPI, HTTPException
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
@@ -7,16 +8,19 @@ class Task(BaseModel):
     id: int
     title: str
     completed: bool = False
+    priority: Literal["low", "medium", "high"] = "medium"
 
 
 class TaskCreate(BaseModel):
     title: str
     completed: bool = False
+    priority: Literal["low", "medium", "high"] = "medium"
 
 
 class TaskUpdate(BaseModel):
     title: str | None = None
     completed: bool | None = None
+    priority: Literal["low", "medium", "high"] | None = None
 
 class ReadFile(BaseModel):
     content: str
@@ -28,7 +32,7 @@ class TaskRepository:
         self._next_id = 1
 
     def add(self, task_create: TaskCreate) -> Task:
-        task = Task(id=self._next_id, title=task_create.title, completed=task_create.completed)
+        task = Task(id=self._next_id, title=task_create.title, completed=task_create.completed, priority=task_create.priority)
         self._tasks[task.id] = task
         self._next_id += 1
         return task
