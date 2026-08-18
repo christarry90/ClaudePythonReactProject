@@ -97,7 +97,24 @@ class TagRepository:
         return True
 
 class TaskTagRepository:
-    def add_tag(task_id, tag_id):
+    def __init__(self):
+        self._task_tags: dict[int, set[int]] = {}
+
+    def add_tag(self, task_id: int, tag_id: int) -> None: 
+        if task_id not in self._task_tags:
+            self._task_tags[task_id] = set()
+        
+        self._task_tags[task_id].add(tag_id)
+
+    def remove_tag(task_id, tag_id) -> bool:
+        if task_id not in self._task_tags:
+            return False
+        del self._task_tags[task_id]
+
+    def get_tags_for_task(task_id) -> None:
+        if task_id not in self._task_tags:
+            
+        return self._task_tags[task_id]
 
 class TaskService:
     def __init__(self, repository: TaskRepository):
