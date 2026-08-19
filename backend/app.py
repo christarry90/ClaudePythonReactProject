@@ -164,6 +164,54 @@ class TaskService:
         task = task.model_copy(update={"tags": tags})
         return task
 
+    def attach_tag(self, task_id: int, tag_id: int) -> Task:
+        task = self._repository.get(task_id)
+        if task is None:
+            raise HTTPException(status_code=404, detail=f"Task {task_id} not found")
+        tag = self._tag_repository.get(tag_id)
+        if tag is None:
+            raise HTTPException(status_code=404, detail=f"Tag {tag_id} not found")
+        self._tasktag_repository.add_tag(task_id, tag_id)
+        task = self._hydrate_tasks(task)
+        return task
+    
+    def detach_tag(self, task_id: int, tag_id: int) -> Task:
+        task = self._repository.get(task_id)
+        if task is None:
+            raise HTTPException(status_code=404, detail=f"Task {task_id} not found")
+        tag = self._tag_repository.get(tag_id)
+        if tag is None:
+            raise HTTPException(status_code=404, detail=f"Tag {tag_id} not found")
+        self._tasktag_repository.remove_tag(task_id, tag_id)
+        task = self._hydrate_tasks(task)
+        return task
+
+class TagService:
+    def __init__(self, tag_repository: TagRepository):
+        self._tag_repository = tag_repository
+
+    def create_tag(self, tag_create: TagCreate) -> Tag:
+        return self._tag_repository.add(tag_create)
+
+    def get_tag(self, tag_id: int) -> Tag:
+        tag = self._tag_repository.get(tag_id)
+        if tag is None:
+            raise HTTPException(status_code=404, detail=f"Tag {tag_id} not found")
+        return tag
+
+    def list_tags(self) -> list[Tag]:
+        return self._tag_repository.list()
+
+    def update_tag(self, tag_id: int, tag_update: TagUpdate) -> Tag:
+        tag = self._tag_repository.update(tag_id, tag_update)
+        if tag is None:
+            raise HTTPException(status_code=404, detail=f"Tag {tag_id} not found")
+        return tag
+
+    def delete_tag(self, tag_id: int) -> None:
+        if not self._tag_repository.delete(tag_id):
+            raise HTTPException(status_code=404, detail=f"Tag {tag_id} not found")
+
 
 # Module-level singleton: Depends() creates a *new* TaskService per request,
 # but every request needs to see the *same* tasks, so the repository itself
@@ -176,6 +224,8 @@ _tasktag_repository = TaskTagRepository()
 def get_task_service() -> TaskService:
     return TaskService(_repository, _tag_repository, _tasktag_repository)
 
+def get_tag_service() -> TagService:
+    return TagService(_tag_repository)
 
 app = FastAPI()
 
@@ -190,16 +240,13 @@ app.add_middleware(
 def create_task(task_create: TaskCreate, service: TaskService = Depends(get_task_service)):
     return service.create_task(task_create)
 
-
 @app.get("/tasks", response_model=list[Task])
 def list_tasks(service: TaskService = Depends(get_task_service)):
     return service.list_tasks()
 
-
 @app.get("/tasks/{task_id}", response_model=Task)
 def get_task(task_id: int, service: TaskService = Depends(get_task_service)):
     return service.get_task(task_id)
-
 
 @app.put("/tasks/{task_id}", response_model=Task)
 def update_task(
@@ -207,11 +254,9 @@ def update_task(
 ):
     return service.update_task(task_id, task_update)
 
-
 @app.delete("/tasks/{task_id}", status_code=204)
 def delete_task(task_id: int, service: TaskService = Depends(get_task_service)):
     service.delete_task(task_id)
-
 
 @app.get("/readRosetta", response_model=ReadFile)
 def read_rosetta():
@@ -222,3 +267,33 @@ def read_rosetta():
 
     except FileNotFoundError:
         raise HTTPException(status_code=404, detail="File not found")
+
+@app.post("/tags", response_model=Tag, status_code=201)
+def create_tag(tag_create: TagCreate, service: TagService = Depends(get_tag_service)):
+    return service.create_tag(tag_create)
+
+@app.get("/tags", response_model=list[Tag])
+def list_tags(service: TagService = Depends(get_tag_service)):
+    return service.list_tags()
+
+@app.get("/tags/{tag_id}", response_model=Tag)
+def get_tag(tag_id: int, service: TagService = Depends(get_tag_service)):
+    return service.get_tag(tag_id)
+
+@app.put("/tags/{tag_id}", response_model=Tag)
+def update_tag(
+    tag_id: int, tag_update: TagUpdate, service: TagService = Depends(get_tag_service)
+):
+    return service.update_tag(tag_id, tag_update)
+
+@app.delete("/tags/{tag_id}", status_code=204)
+def delete_tag(tag_id: int, service: TagService = Depends(get_tag_service)):
+    service.delete_tag(tag_id)
+
+@app.post("/tasks/{task_id}/tags/{tag_id}", response_model=Task)
+def attach_tag(task_id: int, tag_id: int, service: TaskService = Depends(get_task_service)):
+    return service.attach_tag(task_id, tag_id)
+
+@app.post("/tasks/{task_id}/tags/{tag_id}", response_model=Task)
+def detach_tag(task_id: int, tag_id: int, service: TaskService = Depends(get_task_service)):
+    return service.detach_tag(task_id, tag_id)
