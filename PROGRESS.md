@@ -12,20 +12,35 @@ modeling problem (no join table in a plain `dict`-backed repository). Correctly 
 the JPA `@ManyToMany` comparison unaided (auto-generated join table, hydrated objects back) and
 decided the join table needs its own repository (`TaskTagRepository`), not bolted onto
 `TaskRepository`/`TagRepository`, since it doesn't belong to either resource alone — same
-reasoning as a dedicated join-entity repository in Spring. Built so far, all in `backend/app.py`:
-`Tag`/`TagCreate`/`TagUpdate` Pydantic models, `TagRepository` (mirrors `TaskRepository`'s shape),
-and `TaskTagRepository` (hand-rolled join table: `dict[int, set[int]]`, `add_tag`/`remove_tag`/
-`get_tags_for_task`). Two real bugs caught and self-fixed along the way: the `self`-omission
-gotcha recurred on two later methods after being fixed on the first one (worth watching for again
-next session), and a genuine logic bug in `remove_tag` (`del self._task_tags[task_id]` deleted the
-whole task's tag set instead of removing one tag via `.discard(tag_id)`). Backend imports clean.
-**Not yet built:** the harder part — `TaskService` composing across all three repositories so
-`GET /tasks` returns each task with nested `Tag` objects (not raw ids), matching the JPA
-hydration behavior she named; new `/tags` routes; frontend `Tag` type, nested `tags: Tag[]` on
-`Task`, and UI to attach/detach tags (flagged in NEXT_STEPS.md as "a list of lists" — a genuinely
-harder React state shape than anything in M3–M4). Also still open: whether `Tag` deletion should
-cascade/clean up `TaskTagRepository` entries — she correctly placed that responsibility at the
-service layer (the only layer that knows about both repositories) but it isn't implemented yet.
+reasoning as a dedicated join-entity repository in Spring. Data layer (`Tag`/`TagCreate`/
+`TagUpdate`, `TagRepository`, `TaskTagRepository`) was already done last session. This session:
+added `tags: list[Tag] = []` to the `Task` model (caught a class-definition-order bug — `Task`
+referenced `Tag` before it was defined further down the file, same category as the earlier
+`TagUpdate` forward-reference bug — fixed by moving `Tag`/`TagCreate` above `Task`), then composed
+`TaskService` across all three repositories: constructor now takes `TaskRepository`,
+`TagRepository`, `TaskTagRepository` (caught and fixed a camelCase-params naming nudge), module-
+level singletons + `get_task_service()` updated to match. Built `_hydrate_tasks(self, task) ->
+Task` as a private helper (her own call to extract it rather than duplicate the hydration block
+across `get_task`/`list_tasks` — correct DRY instinct, unprompted). Bugs caught along the way: a
+bare (missing `self.`) method call recurring twice more (same gotcha as last session, now three
+occurrences across two sessions — flag this proactively next time instead of waiting for it to
+happen again); `_hydrate_tasks` initially referenced an undefined `task_id` instead of `task.id`;
+a real conceptual bug where `get_tags_for_task` returning `None` (meaning "no tags yet," a normal
+state for any new task) was initially treated as a 404 error condition — caught before it shipped,
+would have broken fetching any untagged task; and a `list_tasks` reassignment bug (`task =
+_hydrate_tasks(task)` inside a for-loop doesn't mutate the original list) — she fixed it herself
+correctly with a `new_list` accumulator pattern, unprompted, without needing the underlying
+reassignment-vs-mutation gap explained first. Verified end-to-end with a live Python smoke test
+(not yet via HTTP — no `/tags` routes exist yet to exercise this over the wire): tagged task
+hydrates to a real nested `Tag` object, `list_tasks` hydrates every task, untagged task correctly
+returns `tags: []` instead of erroring. Backend imports clean.
+**Not yet built:** new `/tags` routes (CRUD for tags, plus attach/detach endpoints — exact route
+shape not yet decided with her, e.g. something like `POST /tasks/{task_id}/tags/{tag_id}` +
+DELETE counterpart); frontend `Tag` type, nested `tags: Tag[]` on `Task`, and UI to attach/detach
+tags (flagged in NEXT_STEPS.md as "a list of lists" — a genuinely harder React state shape than
+anything in M3–M4). Also still open: whether `Tag` deletion should cascade/clean up
+`TaskTagRepository` entries — she correctly placed that responsibility at the service layer (the
+only layer that knows about both repositories) but it isn't implemented yet.
 
 **M6 recap:** Backend and frontend fully containerized (`backend/Dockerfile`, `frontend/Dockerfile`
 multi-stage build, `frontend/nginx.conf` reverse-proxying `/proxy/8000/` to `backend:8000`,
@@ -58,11 +73,12 @@ Frontend URL: `https://code.wakehub.org/absproxy/5173/` or `code.home.wakehub.or
 `/proxy/8000/...` (relative path — note `/proxy/`, not `/absproxy/`, since FastAPI's plain
 route paths need the prefix stripped before it reaches them, unlike Vite).
 
-**Next action:** Resume NEXT_STEPS Path A2 (Tags) mid-feature: build `TaskService` composition
-across `TaskRepository`/`TagRepository`/`TaskTagRepository` so responses include nested `Tag`
-objects, then `/tags` routes, then the frontend (types, nested list rendering, attach/detach UI).
-Course milestones + Capstone are otherwise fully done — `NEXT_STEPS.md`'s other paths (A1 auth,
-A3 deploy, B portfolio polish, C interview prep, D Docker/K8s) remain open any time after A2.
+**Next action:** Resume NEXT_STEPS Path A2 (Tags) mid-feature, same day (paused for lunch): build
+`/tags` routes (CRUD + attach/detach — decide route shape with her first), then the frontend
+(types, nested list rendering, attach/detach UI). `TaskService` composition/hydration is fully
+done and verified. Course milestones + Capstone are otherwise fully done — `NEXT_STEPS.md`'s
+other paths (A1 auth, A3 deploy, B portfolio polish, C interview prep, D Docker/K8s) remain open
+any time after A2.
 
 ## Milestone checklist
 
@@ -211,3 +227,17 @@ self._task_tags[task_id]` deleted the whole task's tag set instead of removing o
 new ROSETTA.md row (many-to-many / hand-rolled join table vs `@ManyToMany`). Backend imports
 clean; stopped before the harder part (TaskService composition across three repositories, /tags
 routes, frontend). Next: resume mid-feature — see "Current step" above.
+2026-08-19 — Resumed Path A2 (Tags) same-day, before lunch. Added `tags: list[Tag] = []` to Task
+(caught + fixed a class-definition-order bug: Task referenced Tag before its definition, same
+category as last session's TagUpdate forward-reference bug). Composed TaskService across all
+three repositories (constructor + module-level singletons), extracted a private `_hydrate_tasks`
+helper on her own initiative to avoid duplicating hydration logic across get_task/list_tasks —
+good unprompted DRY instinct. Caught several bugs: the missing-`self.`-on-method-call gotcha
+recurred a third time (across two sessions now — proactively flag this pattern next session
+rather than waiting for it); an undefined `task_id` reference inside `_hydrate_tasks` (should've
+been `task.id`); a real conceptual bug treating "no tags yet" (`None` from `get_tags_for_task`) as
+a 404 instead of a normal empty state, which would've broken fetching any untagged task; and a
+list_tasks reassignment-doesn't-mutate bug, which she fixed herself correctly and unprompted with
+a `new_list` accumulator. Verified hydration end-to-end via a live Python smoke test (tagged task
+→ nested Tag object, list_tasks hydrates all, untagged task → `tags: []`). Paused for lunch before
+building /tags routes. Next: route shapes for /tags CRUD + attach/detach, then frontend.

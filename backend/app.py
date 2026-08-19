@@ -4,17 +4,6 @@ from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 from pathlib import Path
 
-class Task(BaseModel):
-    id: int
-    title: str
-    completed: bool = False
-    priority: Literal["low", "medium", "high"] = "medium"
-
-
-class TaskCreate(BaseModel):
-    title: str
-    completed: bool = False
-    priority: Literal["low", "medium", "high"] = "medium"
 
 class Tag(BaseModel):
     id: int
@@ -22,6 +11,18 @@ class Tag(BaseModel):
 
 class TagCreate(BaseModel):
     name: str
+
+class Task(BaseModel):
+    id: int
+    title: str
+    completed: bool = False
+    priority: Literal["low", "medium", "high"] = "medium"
+    tags: list[Tag] = []
+
+class TaskCreate(BaseModel):
+    title: str
+    completed: bool = False
+    priority: Literal["low", "medium", "high"] = "medium"
 
 class TaskUpdate(BaseModel):
     title: str | None = None
@@ -118,8 +119,10 @@ class TaskTagRepository:
         return self._task_tags[task_id]
 
 class TaskService:
-    def __init__(self, repository: TaskRepository):
+    def __init__(self, repository: TaskRepository, tag_repository: TagRepository, tasktag_repository: TaskTagRepository):
         self._repository = repository
+        self._tag_repository = tag_repository
+        self._tasktag_repository = tasktag_repository
 
     def create_task(self, task_create: TaskCreate) -> Task:
         return self._repository.add(task_create)
@@ -128,10 +131,16 @@ class TaskService:
         task = self._repository.get(task_id)
         if task is None:
             raise HTTPException(status_code=404, detail=f"Task {task_id} not found")
+        task = self._hydrate_tasks(task)
         return task
 
     def list_tasks(self) -> list[Task]:
-        return self._repository.list()
+        list_tasks = self._repository.list()
+        new_list: list[Task] = []
+        for task in list_tasks:
+            task = self._hydrate_tasks(task)
+            new_list.append(task)
+        return new_list
 
     def update_task(self, task_id: int, task_update: TaskUpdate) -> Task:
         task = self._repository.update(task_id, task_update)
@@ -143,15 +152,29 @@ class TaskService:
         if not self._repository.delete(task_id):
             raise HTTPException(status_code=404, detail=f"Task {task_id} not found")
 
+    def _hydrate_tasks(self, task: Task) -> Task:
+        tag_id_list = self._tasktag_repository.get_tags_for_task(task.id)
+        if tag_id_list is None:
+            tag_id_list = []
+            
+        tags: list[Tag] = []
+        for tag_id in tag_id_list:
+            tag = self._tag_repository.get(tag_id)
+            tags.append(tag)
+        task = task.model_copy(update={"tags": tags})
+        return task
+
 
 # Module-level singleton: Depends() creates a *new* TaskService per request,
 # but every request needs to see the *same* tasks, so the repository itself
 # has to live outside the per-request-created objects.
 _repository = TaskRepository()
+_tag_repository = TagRepository()
+_tasktag_repository = TaskTagRepository()
 
 
 def get_task_service() -> TaskService:
-    return TaskService(_repository)
+    return TaskService(_repository, _tag_repository, _tasktag_repository)
 
 
 app = FastAPI()
