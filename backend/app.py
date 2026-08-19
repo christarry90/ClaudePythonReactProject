@@ -294,6 +294,6 @@ def delete_tag(tag_id: int, service: TagService = Depends(get_tag_service)):
 def attach_tag(task_id: int, tag_id: int, service: TaskService = Depends(get_task_service)):
     return service.attach_tag(task_id, tag_id)
 
-@app.post("/tasks/{task_id}/tags/{tag_id}", response_model=Task)
+@app.delete("/tasks/{task_id}/tags/{tag_id}", response_model=Task)
 def detach_tag(task_id: int, tag_id: int, service: TaskService = Depends(get_task_service)):
     return service.detach_tag(task_id, tag_id)

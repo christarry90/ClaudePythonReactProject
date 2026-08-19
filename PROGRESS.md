@@ -34,13 +34,29 @@ reassignment-vs-mutation gap explained first. Verified end-to-end with a live Py
 (not yet via HTTP — no `/tags` routes exist yet to exercise this over the wire): tagged task
 hydrates to a real nested `Tag` object, `list_tasks` hydrates every task, untagged task correctly
 returns `tags: []` instead of erroring. Backend imports clean.
-**Not yet built:** new `/tags` routes (CRUD for tags, plus attach/detach endpoints — exact route
-shape not yet decided with her, e.g. something like `POST /tasks/{task_id}/tags/{tag_id}` +
-DELETE counterpart); frontend `Tag` type, nested `tags: Tag[]` on `Task`, and UI to attach/detach
-tags (flagged in NEXT_STEPS.md as "a list of lists" — a genuinely harder React state shape than
-anything in M3–M4). Also still open: whether `Tag` deletion should cascade/clean up
-`TaskTagRepository` entries — she correctly placed that responsibility at the service layer (the
-only layer that knows about both repositories) but it isn't implemented yet.
+Backend is now fully done: added `TagService` (mirrors `TaskService`'s CRUD shape, one bug caught
+— `get_tag` referenced a nonexistent `self.tag_create` instead of `self._tag_repository`) plus its
+own module-level singleton/`get_tag_service()` DI wiring. Designed the attach/detach route shape
+herself: `POST /tasks/{task_id}/tags/{tag_id}` to attach, `DELETE` same path to detach — correctly
+reasoned attach/detach logic belongs on `TaskService` (not `TagService`), since it's the only
+service holding all three repositories and needs to validate both the task and tag exist before
+writing to the join table. Wrote `TaskService.attach_tag`/`detach_tag` (one bug: `detach_tag`
+called a nonexistent `TaskTagRepository.detach_tag` instead of the real method name `remove_tag`)
+and the five `/tags` CRUD routes plus the two attach/detach routes (one bug: both attach and detach
+were first registered as `@app.post` on the identical path — a real route-collision bug, not a
+style nit; FastAPI would silently only ever reach the first-registered handler — fixed by changing
+detach's decorator to `@app.delete`). Verified the entire `/tags` feature live over HTTP (not just
+Python): started uvicorn, created a task and a tag, attached (task response showed a hydrated
+`{"id":1,"name":"backend"}` tag object, not a raw id), fetched the task independently to confirm
+it persisted, detached (tags back to `[]`), and confirmed attaching a nonexistent tag id correctly
+404s instead of corrupting the join table. Server stopped cleanly after.
+**Not yet built:** the entire frontend side — `Tag` TypeScript type, nested `tags: Tag[]` on the
+`Task` interface, rendering tags on each `TaskItem`, and UI to attach/detach tags (flagged in
+NEXT_STEPS.md as "a list of lists" — a genuinely harder React state shape than anything in
+M3–M4). Also still open: whether `Tag` deletion should cascade/clean up `TaskTagRepository`
+entries — she correctly placed that responsibility at the service layer (the only layer that
+knows about both repositories) but it isn't implemented yet (not blocking frontend work, since
+nothing currently deletes a tag that's attached to a task in the UI yet either).
 
 **M6 recap:** Backend and frontend fully containerized (`backend/Dockerfile`, `frontend/Dockerfile`
 multi-stage build, `frontend/nginx.conf` reverse-proxying `/proxy/8000/` to `backend:8000`,
@@ -73,12 +89,14 @@ Frontend URL: `https://code.wakehub.org/absproxy/5173/` or `code.home.wakehub.or
 `/proxy/8000/...` (relative path — note `/proxy/`, not `/absproxy/`, since FastAPI's plain
 route paths need the prefix stripped before it reaches them, unlike Vite).
 
-**Next action:** Resume NEXT_STEPS Path A2 (Tags) mid-feature, same day (paused for lunch): build
-`/tags` routes (CRUD + attach/detach — decide route shape with her first), then the frontend
-(types, nested list rendering, attach/detach UI). `TaskService` composition/hydration is fully
-done and verified. Course milestones + Capstone are otherwise fully done — `NEXT_STEPS.md`'s
-other paths (A1 auth, A3 deploy, B portfolio polish, C interview prep, D Docker/K8s) remain open
-any time after A2.
+**Next action:** Resume NEXT_STEPS Path A2 (Tags) with the frontend — the entire backend (models,
+all three repositories, TaskService/TagService composition + hydration, all `/tags` + attach/
+detach routes) is done and verified live over HTTP. Build: `Tag` type in `types.ts`, nested
+`tags: Tag[]` on `Task`, render tags in `TaskItem.tsx`, and UI to attach/detach a tag from a task
+(fetch calls to the new `POST`/`DELETE /tasks/{task_id}/tags/{tag_id}` routes). This is the
+harder React state shape NEXT_STEPS.md flagged ("a list of lists"). Course milestones + Capstone
+are otherwise fully done — `NEXT_STEPS.md`'s other paths (A1 auth, A3 deploy, B portfolio polish,
+C interview prep, D Docker/K8s) remain open any time after A2.
 
 ## Milestone checklist
 
@@ -240,4 +258,16 @@ a 404 instead of a normal empty state, which would've broken fetching any untagg
 list_tasks reassignment-doesn't-mutate bug, which she fixed herself correctly and unprompted with
 a `new_list` accumulator. Verified hydration end-to-end via a live Python smoke test (tagged task
 → nested Tag object, list_tasks hydrates all, untagged task → `tags: []`). Paused for lunch before
-building /tags routes. Next: route shapes for /tags CRUD + attach/detach, then frontend.
+building /tags routes.
+2026-08-19 (cont'd) — Resumed after lunch, finished the entire backend for Tags. Built TagService
+(one bug: get_tag referenced a nonexistent self.tag_create instead of self._tag_repository) plus
+its DI wiring. She independently designed the attach/detach route shape (POST/DELETE
+/tasks/{task_id}/tags/{tag_id}) and correctly reasoned attach/detach belongs on TaskService, not
+TagService, since it's the only service with all three repositories. Wrote attach_tag/detach_tag
+(one bug: called a nonexistent TaskTagRepository.detach_tag instead of the real remove_tag) and
+all /tags CRUD + attach/detach routes (one real bug, not style: both attach and detach were first
+registered as @app.post on the identical path — a route collision, not just a nitpick — fixed to
+@app.delete for detach). Verified the whole feature live over HTTP with uvicorn + curl: attach
+returns a hydrated nested Tag object, detach clears it, get_task independently confirms
+persistence, attaching a nonexistent tag 404s cleanly. Backend for Path A2 is fully complete.
+Next: frontend — Tag type, nested tags on Task, TaskItem rendering, attach/detach UI.
