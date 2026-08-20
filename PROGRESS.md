@@ -4,28 +4,27 @@ The tutor (see `TUTOR_PROMPT.md`) reads this file at the start of every session 
 you are, and updates it at the end of every session. You're welcome to edit it yourself too —
 it's your progress, not a black box.
 
-**Current milestone:** Stretch — Postgres + SQLAlchemy persistence (in progress; switched over
-from NEXT_STEPS Path A2 — Tags, which is paused with only the frontend remaining, see below)
+**Current milestone:** Stretch — Postgres + SQLAlchemy persistence — **complete**. Resuming
+NEXT_STEPS Path A2 (Tags) frontend next, see below.
 
-**Current step:** Postgres + SQLAlchemy stretch (`TUTOR_PROMPT.md` Section 13). `db on` in Discord
-confirmed reachable via `psql`. Step 1 (raw `psql` round trip) done: wrote `CREATE TABLE tasks`
-by hand (caught a real bug — `completed INT(1)` is MySQL syntax, doesn't exist in Postgres; fixed
-to `BOOLEAN`, matching the Pydantic `bool` field), inspected it with `\d tasks`, inserted 5 rows
-with `RETURNING id` (first attempt used uppercase priority values inconsistent with the API's
-lowercase `Literal`; self-corrected before running). Existing ROSETTA.md row for auto-increment
-PKs confirmed already covers this, not duplicated. Step 2 (SQLAlchemy model) done: added
-`sqlalchemy`+`psycopg2-binary` to `requirements.txt` and installed; added `.env` to `.gitignore`
-*before* creating the real `backend/.env` (correct order, unprompted — same discipline as the
-M5 git-identity check); `backend/.env` had two bugs on the first pass (typo `postgressql://`,
-and a missing password in the connection string) both self-corrected. Built `backend/db.py`:
-`Base(DeclarativeBase)` + `Task` ORM model (correctly identified this needs to be a separate file
-from `app.py`'s Pydantic `Task` — naming collision + DTO/entity separation, reasoned unprompted)
-— caught bugs: `Base`/`String`/`Boolean` referenced before importing, and later a stray
-incomplete `engine = ` statement plus the engine/session/`create_all` block landed mis-indented
-*inside* the `Task` class body instead of at module level — both fixed. `db.py` verified live:
-imports clean, `engine` connects to the real Postgres instance. Step 3 (new Postgres-backed
-repository, `backend/postgres_task_repository.py`) just started, mid-`add()`/`get()` — see "Next
-action" below for exact state, paused before those bugs were flagged to her.
+**Current step:** Stretch complete end-to-end. Step 3 (`backend/postgres_task_repository.py`)
+finished: `add`/`get`/`list`/`update`/`delete` all written and verified live against real
+Postgres (caught: invalid `from db import db.X` import syntax → `import db`; bare module-level
+functions with `self` but no class → wrapped in `PostgresTaskRepository`; `Task(id=db_task.title,
+...)` bug → `db_task.id`; `list`'s `.append(id=..., ...)` bug → `.append(Task(...))`; `update`
+initially clobbered unset fields with `None` → fixed with `task_update.model_dump
+(exclude_unset=True)` + `setattr` loop, same pattern as the in-memory repo). Step 4 (DI wiring
+swap): changed `_repository = TaskRepository()` to `PostgresTaskRepository()` in `app.py` — hit a
+real circular import (`app.py` importing `postgres_task_repository` at the top, which imports
+`Task`/`TaskCreate`/`TaskUpdate` back from `app` before those classes existed yet); fixed by
+moving that one import down to just above the `_repository = ...` line, still module-level, just
+positioned after `Task`/`TaskCreate`/`TaskUpdate` are defined — her own correct diagnosis once
+prompted to think about *timing* rather than "wrap it in a function." Verified live: `/tasks`
+returns the real Postgres rows over HTTP, create round-trips too — zero other route/service code
+touched, confirming the M2 abstraction boundary holds. Step 5 (persistence proof): created a task
+via HTTP, `db off` in Discord → `/tasks` correctly 500s, `db on` → task confirmed still there.
+Step 6: committed (`app.py` + `postgres_task_repository.py`, her own commit message) and pushed
+to `mine` — the `gh auth setup-git` fix from the earlier GitHub-push session held up cleanly.
 
 **A2 (Tags) recap:** Backend fully complete and verified live over HTTP — data layer
 (`Tag`/`TagCreate`/`TagUpdate`, `TagRepository`, `TaskTagRepository`), `TaskService`/`TagService`
@@ -72,30 +71,16 @@ Frontend URL: `https://code.wakehub.org/absproxy/5173/` or `code.home.wakehub.or
 `/proxy/8000/...` (relative path — note `/proxy/`, not `/absproxy/`, since FastAPI's plain
 route paths need the prefix stripped before it reaches them, unlike Vite).
 
-**Next action:** Resume the Postgres stretch (`TUTOR_PROMPT.md` Section 13) mid-Step-3. Steps 1–2
-are fully done (see below). Step 3 — `backend/postgres_task_repository.py` — was just started
-before pausing for lunch + a team meeting; it currently has real, uncorrected syntax/logic errors
-(not yet flagged to her, paused before that): `from db import db.SessionLocal` / `from db import
-db.Task` are invalid syntax (attribute access inside an import statement — needs `import db` and
-then reference `db.SessionLocal`/`db.Task` directly, no separate imports of those two); `add()` is
-defined as a bare module-level function, not a method inside a repository class (no `self`, no
-class wrapper yet — she hasn't been told this, don't assume she already knows to fix it); the
-`Task(...)` construction at the end of `add()` passes `db_task.title` where `id=` expects
-`db_task.id` (a real bug, not just missing — likely a copy-paste/reorder slip); `get()` is an
-empty stub (`def get(self, task_id: int) -> Task | None:` with no body). Db connects fine
-(`db.py`'s `engine`/`SessionLocal` verified live last session). Postgres itself may need `db on`
-again in Discord if the sandbox timed out between sessions — check before assuming it's a code
-issue. Steps 4–6 (DI-only wiring swap, persistence-proof exercise, commit+push to `mine`) not
-started.
-
-**Paused, resume after the stretch completes:** NEXT_STEPS Path A2 (Tags) — backend is fully done
-and verified live over HTTP (models, all three repositories, TaskService/TagService composition +
-hydration, all `/tags` + attach/detach routes). Only the frontend remains: `Tag` type in
-`types.ts`, nested `tags: Tag[]` on `Task`, render tags in `TaskItem.tsx`, and UI to attach/detach
-a tag from a task (fetch calls to `POST`/`DELETE /tasks/{task_id}/tags/{tag_id}`) — the harder
-React state shape NEXT_STEPS.md flagged ("a list of lists"). Course milestones + Capstone are
-otherwise fully done — `NEXT_STEPS.md`'s other paths (A1 auth, A3 deploy, B portfolio polish, C
-interview prep, D Docker/K8s) remain open any time after A2/stretch.
+**Next action:** Resume NEXT_STEPS Path A2 (Tags) — backend is fully done and verified live over
+HTTP (models, all three repositories, TaskService/TagService composition + hydration, all `/tags`
++ attach/detach routes). Only the frontend remains: `Tag` type in `types.ts`, nested `tags: Tag[]`
+on `Task`, render tags in `TaskItem.tsx`, and UI to attach/detach a tag from a task (fetch calls to
+`POST`/`DELETE /tasks/{task_id}/tags/{tag_id}`) — the harder React state shape NEXT_STEPS.md
+flagged ("a list of lists"). Note: the frontend currently fetches against the in-memory-repository
+era backend, now Postgres-backed — no frontend changes needed for that, just worth a mention that
+data now persists across backend restarts. Course milestones + Capstone + the Postgres stretch are
+all now fully done — after A2, `NEXT_STEPS.md`'s other paths (A1 auth, A3 deploy, B portfolio
+polish, C interview prep, D Docker/K8s) are open any time.
 
 ## Milestone checklist
 
@@ -113,7 +98,8 @@ interview prep, D Docker/K8s) remain open any time after A2/stretch.
       frontend build, nginx reverse-proxy config, docker-compose.yml, verified end-to-end)
 - [x] Capstone — Working with Claude Code at scale (delegated a subagent to add a `priority`
       field end-to-end, created first `CLAUDE.md` entry, covered permission-mode calibration)
-- [ ] Stretch — Postgres + SQLAlchemy persistence
+- [x] Stretch — Postgres + SQLAlchemy persistence (real Postgres-backed `TaskRepository`,
+      DI-swapped in with zero route/service changes, persistence proven via `db off`/`db on`)
 
 ## Session log
 
@@ -284,6 +270,23 @@ mismatch both self-corrected; SQLAlchemy Base/Task model + engine/session in new
 verified connecting live; backend/.env created only after confirming .gitignore excludes it,
 unprompted good instinct, with two self-corrected bugs — a typo and a missing password). Started
 Step 3 (backend/postgres_task_repository.py) — add()/get() begun but left with real uncorrected
-bugs when she paused for lunch + a team meeting (see "Next action" for the precise state). Next:
-resume Step 3 exactly where it left off, walk through the specific bugs left in the new
-repository file, then Steps 4–6 (DI-only wiring swap, persistence-proof exercise, commit+push).
+bugs when she paused for lunch + a team meeting.
+2026-08-20 (cont'd) — Resumed after lunch + team meeting, finished the Postgres stretch end to
+end. Step 3: fixed all four bugs left in postgres_task_repository.py from before lunch (invalid
+`from db import db.X` import syntax, missing class wrapper around bare `add`/`get` functions,
+`Task(id=db_task.title, ...)` → `.id`, empty `get()` stub), then wrote `list`/`update`/`delete`
+from scratch against the in-memory `TaskRepository`'s interface as the reference shape — caught a
+`.append(id=..., ...)` bug (list.append takes one positional item, not kwargs) and, in `update`,
+correctly reasoned through why unconditionally assigning all three fields from `TaskUpdate` would
+null out fields the caller didn't set, fixing it with the same `model_dump(exclude_unset=True)`
+pattern as the in-memory repo. All five methods verified live against real Postgres. Step 4: DI
+wiring swap in app.py surfaced a genuine circular import (app.py importing
+postgres_task_repository at module top, which imports Task/TaskCreate/TaskUpdate back from app
+before those classes existed) — she correctly diagnosed it as a timing problem once prompted, not
+a "wrap in a function" problem, and moved the import below the Task/TaskCreate/TaskUpdate
+definitions. Verified live over HTTP with zero route/service code changes — the M2 abstraction
+boundary held. Step 5: persistence proven live (create via HTTP → db off → 500 confirmed → db on
+→ task confirmed still present, contrasted against in-memory data which dies on a mere restart).
+Step 6: committed and pushed to mine — the earlier gh auth setup-git fix held up. Postgres +
+SQLAlchemy stretch is now fully complete. Next: resume NEXT_STEPS Path A2 (Tags) frontend — Tag
+type, nested tags on Task, TaskItem rendering, attach/detach UI.
