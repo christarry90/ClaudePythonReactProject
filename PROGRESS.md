@@ -7,57 +7,39 @@ it's your progress, not a black box.
 **Current milestone:** Stretch — Postgres + SQLAlchemy persistence (in progress; switched over
 from NEXT_STEPS Path A2 — Tags, which is paused with only the frontend remaining, see below)
 
-**Current step:** Building NEXT_STEPS Path A2 (Tags, many-to-many) on `backend/app.py`. She chose
-Tags over Projects specifically because she correctly identified it as the harder relational-
-modeling problem (no join table in a plain `dict`-backed repository). Correctly reasoned through
-the JPA `@ManyToMany` comparison unaided (auto-generated join table, hydrated objects back) and
-decided the join table needs its own repository (`TaskTagRepository`), not bolted onto
-`TaskRepository`/`TagRepository`, since it doesn't belong to either resource alone — same
-reasoning as a dedicated join-entity repository in Spring. Data layer (`Tag`/`TagCreate`/
-`TagUpdate`, `TagRepository`, `TaskTagRepository`) was already done last session. This session:
-added `tags: list[Tag] = []` to the `Task` model (caught a class-definition-order bug — `Task`
-referenced `Tag` before it was defined further down the file, same category as the earlier
-`TagUpdate` forward-reference bug — fixed by moving `Tag`/`TagCreate` above `Task`), then composed
-`TaskService` across all three repositories: constructor now takes `TaskRepository`,
-`TagRepository`, `TaskTagRepository` (caught and fixed a camelCase-params naming nudge), module-
-level singletons + `get_task_service()` updated to match. Built `_hydrate_tasks(self, task) ->
-Task` as a private helper (her own call to extract it rather than duplicate the hydration block
-across `get_task`/`list_tasks` — correct DRY instinct, unprompted). Bugs caught along the way: a
-bare (missing `self.`) method call recurring twice more (same gotcha as last session, now three
-occurrences across two sessions — flag this proactively next time instead of waiting for it to
-happen again); `_hydrate_tasks` initially referenced an undefined `task_id` instead of `task.id`;
-a real conceptual bug where `get_tags_for_task` returning `None` (meaning "no tags yet," a normal
-state for any new task) was initially treated as a 404 error condition — caught before it shipped,
-would have broken fetching any untagged task; and a `list_tasks` reassignment bug (`task =
-_hydrate_tasks(task)` inside a for-loop doesn't mutate the original list) — she fixed it herself
-correctly with a `new_list` accumulator pattern, unprompted, without needing the underlying
-reassignment-vs-mutation gap explained first. Verified end-to-end with a live Python smoke test
-(not yet via HTTP — no `/tags` routes exist yet to exercise this over the wire): tagged task
-hydrates to a real nested `Tag` object, `list_tasks` hydrates every task, untagged task correctly
-returns `tags: []` instead of erroring. Backend imports clean.
-Backend is now fully done: added `TagService` (mirrors `TaskService`'s CRUD shape, one bug caught
-— `get_tag` referenced a nonexistent `self.tag_create` instead of `self._tag_repository`) plus its
-own module-level singleton/`get_tag_service()` DI wiring. Designed the attach/detach route shape
-herself: `POST /tasks/{task_id}/tags/{tag_id}` to attach, `DELETE` same path to detach — correctly
-reasoned attach/detach logic belongs on `TaskService` (not `TagService`), since it's the only
-service holding all three repositories and needs to validate both the task and tag exist before
-writing to the join table. Wrote `TaskService.attach_tag`/`detach_tag` (one bug: `detach_tag`
-called a nonexistent `TaskTagRepository.detach_tag` instead of the real method name `remove_tag`)
-and the five `/tags` CRUD routes plus the two attach/detach routes (one bug: both attach and detach
-were first registered as `@app.post` on the identical path — a real route-collision bug, not a
-style nit; FastAPI would silently only ever reach the first-registered handler — fixed by changing
-detach's decorator to `@app.delete`). Verified the entire `/tags` feature live over HTTP (not just
-Python): started uvicorn, created a task and a tag, attached (task response showed a hydrated
-`{"id":1,"name":"backend"}` tag object, not a raw id), fetched the task independently to confirm
-it persisted, detached (tags back to `[]`), and confirmed attaching a nonexistent tag id correctly
-404s instead of corrupting the join table. Server stopped cleanly after.
-**Not yet built:** the entire frontend side — `Tag` TypeScript type, nested `tags: Tag[]` on the
-`Task` interface, rendering tags on each `TaskItem`, and UI to attach/detach tags (flagged in
-NEXT_STEPS.md as "a list of lists" — a genuinely harder React state shape than anything in
-M3–M4). Also still open: whether `Tag` deletion should cascade/clean up `TaskTagRepository`
-entries — she correctly placed that responsibility at the service layer (the only layer that
-knows about both repositories) but it isn't implemented yet (not blocking frontend work, since
-nothing currently deletes a tag that's attached to a task in the UI yet either).
+**Current step:** Postgres + SQLAlchemy stretch (`TUTOR_PROMPT.md` Section 13). `db on` in Discord
+confirmed reachable via `psql`. Step 1 (raw `psql` round trip) done: wrote `CREATE TABLE tasks`
+by hand (caught a real bug — `completed INT(1)` is MySQL syntax, doesn't exist in Postgres; fixed
+to `BOOLEAN`, matching the Pydantic `bool` field), inspected it with `\d tasks`, inserted 5 rows
+with `RETURNING id` (first attempt used uppercase priority values inconsistent with the API's
+lowercase `Literal`; self-corrected before running). Existing ROSETTA.md row for auto-increment
+PKs confirmed already covers this, not duplicated. Step 2 (SQLAlchemy model) done: added
+`sqlalchemy`+`psycopg2-binary` to `requirements.txt` and installed; added `.env` to `.gitignore`
+*before* creating the real `backend/.env` (correct order, unprompted — same discipline as the
+M5 git-identity check); `backend/.env` had two bugs on the first pass (typo `postgressql://`,
+and a missing password in the connection string) both self-corrected. Built `backend/db.py`:
+`Base(DeclarativeBase)` + `Task` ORM model (correctly identified this needs to be a separate file
+from `app.py`'s Pydantic `Task` — naming collision + DTO/entity separation, reasoned unprompted)
+— caught bugs: `Base`/`String`/`Boolean` referenced before importing, and later a stray
+incomplete `engine = ` statement plus the engine/session/`create_all` block landed mis-indented
+*inside* the `Task` class body instead of at module level — both fixed. `db.py` verified live:
+imports clean, `engine` connects to the real Postgres instance. Step 3 (new Postgres-backed
+repository, `backend/postgres_task_repository.py`) just started, mid-`add()`/`get()` — see "Next
+action" below for exact state, paused before those bugs were flagged to her.
+
+**A2 (Tags) recap:** Backend fully complete and verified live over HTTP — data layer
+(`Tag`/`TagCreate`/`TagUpdate`, `TagRepository`, `TaskTagRepository`), `TaskService`/`TagService`
+composition with tag hydration (`_hydrate_tasks` helper, her own unprompted DRY extraction), and
+all `/tags` CRUD + attach/detach routes (`POST`/`DELETE /tasks/{task_id}/tags/{tag_id}`, her own
+route-shape design). Notable bugs caught along the way: the missing-`self.`-on-method-call gotcha
+recurred three times across two sessions (flag proactively next time rather than waiting for a
+fourth); a real conceptual bug treating "no tags yet" as a 404 instead of a normal empty state;
+a route-collision bug where attach/detach were both first registered as `@app.post` on the
+identical path. Only the frontend remains (`Tag` type, nested `tags: Tag[]` on `Task`,
+`TaskItem.tsx` rendering, attach/detach UI — NEXT_STEPS.md's "list of lists," harder than M3–M4)
+— resume after the Postgres stretch completes. Whether `Tag` deletion should cascade/clean up
+`TaskTagRepository` entries is still open (correctly placed at the service layer, not implemented,
+not blocking frontend work).
 
 **M6 recap:** Backend and frontend fully containerized (`backend/Dockerfile`, `frontend/Dockerfile`
 multi-stage build, `frontend/nginx.conf` reverse-proxying `/proxy/8000/` to `backend:8000`,
@@ -90,11 +72,21 @@ Frontend URL: `https://code.wakehub.org/absproxy/5173/` or `code.home.wakehub.or
 `/proxy/8000/...` (relative path — note `/proxy/`, not `/absproxy/`, since FastAPI's plain
 route paths need the prefix stripped before it reaches them, unlike Vite).
 
-**Next action:** Working the new Stretch milestone (`TUTOR_PROMPT.md` Section 13 — Postgres +
-SQLAlchemy, which replaced the old SQLite stretch via PR #15, merged into `main` before this
-session). Start with `db on` in Discord, confirm via `psql`, then Steps 1–6 per Section 13 (raw
-`psql` round trip, SQLAlchemy model + `backend/.env`, new repository implementation, DI-only
-swap, persistence-proof exercise, commit+push to `mine`).
+**Next action:** Resume the Postgres stretch (`TUTOR_PROMPT.md` Section 13) mid-Step-3. Steps 1–2
+are fully done (see below). Step 3 — `backend/postgres_task_repository.py` — was just started
+before pausing for lunch + a team meeting; it currently has real, uncorrected syntax/logic errors
+(not yet flagged to her, paused before that): `from db import db.SessionLocal` / `from db import
+db.Task` are invalid syntax (attribute access inside an import statement — needs `import db` and
+then reference `db.SessionLocal`/`db.Task` directly, no separate imports of those two); `add()` is
+defined as a bare module-level function, not a method inside a repository class (no `self`, no
+class wrapper yet — she hasn't been told this, don't assume she already knows to fix it); the
+`Task(...)` construction at the end of `add()` passes `db_task.title` where `id=` expects
+`db_task.id` (a real bug, not just missing — likely a copy-paste/reorder slip); `get()` is an
+empty stub (`def get(self, task_id: int) -> Task | None:` with no body). Db connects fine
+(`db.py`'s `engine`/`SessionLocal` verified live last session). Postgres itself may need `db on`
+again in Discord if the sandbox timed out between sessions — check before assuming it's a code
+issue. Steps 4–6 (DI-only wiring swap, persistence-proof exercise, commit+push to `mine`) not
+started.
 
 **Paused, resume after the stretch completes:** NEXT_STEPS Path A2 (Tags) — backend is fully done
 and verified live over HTTP (models, all three repositories, TaskService/TagService composition +
@@ -278,3 +270,20 @@ registered as @app.post on the identical path — a route collision, not just a 
 returns a hydrated nested Tag object, detach clears it, get_task independently confirms
 persistence, attaching a nonexistent tag 404s cleanly. Backend for Path A2 is fully complete.
 Next: frontend — Tag type, nested tags on Task, TaskItem rendering, attach/detach UI.
+2026-08-20 — Pushed 27 local commits to her `mine` GitHub remote (christarry90/
+ClaudePythonReactProject) — clean fast-forward, nothing diverged. Hit and fixed a real auth
+issue along the way (logged to ENVIRONMENT_LOG.md): gh auth login alone wasn't sufficient, since
+~/.gitconfig never existed and GIT_ASKPASS pointed at a dead VS Code IPC socket — fixed via `gh
+auth setup-git` plus unsetting GIT_ASKPASS for the push. She asked about a new curriculum commit
+(PR #15, already merged into main) that replaced the SQLite stretch milestone with Postgres +
+SQLAlchemy — walked her through TUTOR_PROMPT.md Section 13's new content. She chose to switch
+over to the Postgres stretch now, pausing Path A2 (Tags) with only its frontend remaining.
+Completed Postgres Steps 1–2 in full (raw psql CREATE TABLE/\d/INSERT...RETURNING with real bugs
+caught — INT(1) is MySQL syntax not Postgres, and an uppercase/lowercase priority-value
+mismatch both self-corrected; SQLAlchemy Base/Task model + engine/session in new backend/db.py,
+verified connecting live; backend/.env created only after confirming .gitignore excludes it,
+unprompted good instinct, with two self-corrected bugs — a typo and a missing password). Started
+Step 3 (backend/postgres_task_repository.py) — add()/get() begun but left with real uncorrected
+bugs when she paused for lunch + a team meeting (see "Next action" for the precise state). Next:
+resume Step 3 exactly where it left off, walk through the specific bugs left in the new
+repository file, then Steps 4–6 (DI-only wiring swap, persistence-proof exercise, commit+push).
