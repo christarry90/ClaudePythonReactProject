@@ -114,7 +114,7 @@ C interview prep, D Docker/K8s) remain open any time after A2.
       frontend build, nginx reverse-proxy config, docker-compose.yml, verified end-to-end)
 - [x] Capstone — Working with Claude Code at scale (delegated a subagent to add a `priority`
       field end-to-end, created first `CLAUDE.md` entry, covered permission-mode calibration)
-- [ ] Stretch — SQLite + SQLAlchemy persistence
+- [ ] Stretch — Postgres + SQLAlchemy persistence
 
 ## Session log
 

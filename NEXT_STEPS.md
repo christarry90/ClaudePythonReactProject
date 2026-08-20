@@ -1,7 +1,7 @@
 # Next Steps — Beyond the Course
 
 You've built a working full-stack app end to end (M0–M5), and picked up the Capstone and/or the
-SQLite stretch goal. What's below isn't a new milestone — it's a menu. **Pick whichever path is
+Postgres stretch goal. What's below isn't a new milestone — it's a menu. **Pick whichever path is
 useful to you right now, skip the rest, or come back to any of them later.** Nothing here is
 sequential and nothing here is required.
 
@@ -22,7 +22,7 @@ from scratch. Pick one, or do more than one, in any order.
 - **What:** e.g. "Projects" that own many "Tasks" (one-to-many), or "Tags" on tasks
   (many-to-many).
 - **What it teaches:** relational modeling inside the repository pattern you already built,
-  foreign keys if you did the SQLite stretch, nested Pydantic models, and a genuinely harder React
+  foreign keys if you did the Postgres stretch, nested Pydantic models, and a genuinely harder React
   state problem (a list of lists, not a flat list).
 - **Rough scope:** a few evenings — bigger than one new field, smaller than auth.
 - **Pick this if:** you want more reps on data modeling, or want the frontend state logic to get
@@ -94,7 +94,12 @@ independent pieces; do one or both, in any order.
 ### D1: Volumes / persistence
 - **What:** add a named volume (or bind mount) to the `docker-compose.yml` from M6 so data
   survives `docker compose down` / `up`.
-  - If you did the SQLite stretch goal: persist the actual `.db` file.
+  - If you did the Postgres stretch goal: you've already seen a database container with a
+    persisted volume (the sandbox's own `postgres` sidecar) — this is the same idea, but on a
+    container you add to your own app's `docker-compose.yml` from M6. A natural follow-on from
+    there, if you want it: Alembic migrations, now that you have a real Postgres instance of your
+    own to point them at — the Stretch milestone deliberately stopped at
+    `Base.metadata.create_all()` and left schema migrations for here.
   - If not: a minimal, self-contained demo still teaches the concept — write a file inside the
     running container, recreate the container, and watch the file disappear; add a volume,
     recreate again, and watch it survive this time.
