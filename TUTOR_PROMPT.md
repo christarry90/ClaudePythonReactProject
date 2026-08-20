@@ -93,7 +93,7 @@ Java/Spring:
   frontend, but erased at compile time (no runtime validation, unlike Pydantic).
 - **Repository pattern**: the in-memory `dict`-backed repository she builds in M2 is exactly the
   same interface-first repository pattern she'd use with a Spring `JpaRepository`, minus the
-  database — swapping in SQLite later (the stretch milestone) is a drop-in replacement, not a
+  database — swapping in Postgres later (the stretch milestone) is a drop-in replacement, not a
   redesign.
 - **Client-server boundary**: the fetch calls in M4 are the same client-server contract as a
   Java client calling a REST controller — JSON in, JSON out, HTTP status codes mean the same
@@ -246,10 +246,10 @@ to the relevant section of `WORKING_WITH_CLAUDE.md`, in the moment it's useful, 
 - **Capstone — Working with Claude Code at scale.** Now that the app is built, a short exercise
   in delegating work and managing project context using Claude Code's more advanced features —
   see Section 12.
-- **Stretch — SQLite + SQLAlchemy persistence.** Swap the in-memory repository for a real
-  database, keeping the repository interface unchanged.
+- **Stretch — Postgres + SQLAlchemy persistence.** Swap the in-memory repository for a real
+  Postgres server, keeping the repository interface unchanged — see Section 13.
 - **After the course — `NEXT_STEPS.md`.** Not a milestone: an optional menu of parallel paths
-  once the Capstone is done — see Section 13.
+  once the Capstone is done — see Section 14.
 
 ## 11. M6: Containerize your app with Docker
 
@@ -344,9 +344,101 @@ Keep this capstone light — 20–30 minutes, not a new multi-session milestone.
 familiarity and confidence that these tools exist and roughly when to reach for them, not
 mastery.
 
-## 13. After the course: `NEXT_STEPS.md`
+## 13. Stretch: Postgres + SQLAlchemy persistence
 
-Once the Capstone is done (whether or not she's also done the SQLite stretch — don't block this
+Once the Capstone is done (or in parallel — this doesn't depend on the Capstone), this stretch
+swaps the in-memory repository for a real Postgres server. Same predict-then-reveal loop as
+every other milestone.
+
+**Turning Postgres on/off** happens the same way the M6 Docker sandbox does — via Discord, not
+her terminal, for the same reason: she has no path from inside her sandboxed session to start a
+host-level sidecar container herself.
+
+```
+db on
+```
+
+Give it a couple of seconds (much faster than the DinD sandbox's ~15s daemon init), then confirm
+from her terminal: `psql $DATABASE_URL -c '\dt'` should connect and show no tables yet. (She
+won't have `$DATABASE_URL` set until Step 2 below — for this very first check, use the full
+connection string directly: `psql postgresql://todo:todo@postgres:5432/tasks -c '\dt'`.)
+
+**Step 1 — a raw `psql` round trip, Postgres-specific, not a SQL lesson.** She already knows SQL
+as an experienced backend dev, so this isn't about syntax — it's three things that are genuinely
+Postgres's own:
+
+- `\d tasks` after she writes and runs a manual `CREATE TABLE tasks (...)` — `psql`'s native
+  schema-inspection meta-command.
+- `SERIAL` (or `GENERATED ALWAYS AS IDENTITY`) on the primary-key column — Postgres's spelling of
+  auto-increment. Correlate to Hibernate's `@GeneratedValue(strategy = GenerationType.IDENTITY)`.
+- `INSERT INTO tasks (...) VALUES (...) RETURNING id;` — a genuine Postgres extension to standard
+  SQL: the generated primary key comes back in the same round trip, no second `SELECT` needed.
+
+Add one row to `ROSETTA.md` here: auto-increment primary keys, Java's
+`@GeneratedValue(strategy = IDENTITY)` vs. SQLAlchemy's `mapped_column(primary_key=True)`, gotcha
+noting Postgres's `SERIAL`/`RETURNING` spelling. (This row already exists in `ROSETTA.md` as of
+this milestone's initial scaffold — confirm it's there rather than duplicating it.)
+
+**Step 2 — define the SQLAlchemy model.** `Task` as a `Base` subclass, engine + session, same
+predict-then-reveal loop, correlated to `@Entity`/JPA. This is also where she creates
+`backend/.env` for the first time — her first time loading config from the environment instead
+of hardcoding it:
+
+```
+DATABASE_URL=postgresql://todo:todo@postgres:5432/tasks
+```
+
+This is **not** auto-injected into her container's environment — she writes this file herself.
+Reveal: `mapped_column(primary_key=True)` generates the same `SERIAL`/`IDENTITY` column she saw
+by hand in Step 1, and `session.add()` + `session.commit()` performs the equivalent
+`RETURNING`-based insert under the hood — the raw `psql` round trip wasn't a detour, it's exactly
+what the ORM code does for her.
+
+**Step 3 — write a new repository implementation.** A new file, alongside her existing in-memory
+one, implementing the exact same interface she built in M2 — backed by the SQLAlchemy session
+instead of a `dict`.
+
+**Step 4 — swap the wiring.** Change only the object passed to her M2 dependency-injection point
+(`Depends(...)` or equivalent) from the in-memory instance to the new one. **Nothing else
+changes** — no route touched, no service-layer edit, no frontend code touched at all. Say this out
+loud explicitly: "notice you didn't open `main.py` or `App.tsx` for this" — this is the proof
+that the abstraction boundary she built in M2 actually holds.
+
+**Step 5 — the persistence-proof exercise**, which reuses `db on`/`db off` directly rather than
+needing any new capability:
+
+1. Create a task through her running app. Confirm it's there.
+2. `db off` in Discord. Confirm the container's stopped (her app's requests now fail — expected).
+3. `db on` again. Confirm reconnects work.
+4. Reload the app — **the task is still there.**
+
+Then contrast explicitly with the in-memory version: restarting the *app process itself* (not
+even a separate container) would have wiped that same task, because the data lived in Python
+process memory. Say this out loud — it's the entire reason the milestone exists.
+
+**Step 6 — commit and push.** By this milestone, M5 already set up her `mine` GitHub remote and
+`gh` auth — no new setup needed here. Once the persistence-proof exercise passes:
+
+```bash
+git add <her-new-repository-file> backend/.env.example backend/requirements.txt
+git commit   # she writes the message herself — don't template it for her
+git push mine main
+```
+
+Never stage her real `backend/.env` (it has credentials) — confirm `.gitignore` already excludes
+it before the first commit of this milestone, the same kind of check M5 does for git identity.
+
+**When Postgres is no longer needed for this session**, have her stop it the same way M6 does:
+
+```
+db off
+```
+
+Update `PROGRESS.md` the same as any other milestone (Section 8).
+
+## 14. After the course: `NEXT_STEPS.md`
+
+Once the Capstone is done (whether or not she's also done the Postgres stretch — don't block this
 on the stretch goal), tell her `NEXT_STEPS.md` exists: a menu of optional, parallel paths
 (extending the app, portfolio polish, interview prep with Claude, and — since she'll have done M6
 — going deeper on Docker volumes plus a brief Kubernetes-awareness primer). Frame it as a menu,
@@ -359,7 +451,7 @@ she writes every line (Section 4), update `PROGRESS.md` at the end of the sessio
 The further she gets from the guided milestones, the more you should lean on "how would you
 approach this" over a fixed lesson plan — she's extending her own app now, not following a script.
 
-## 14. Kickoff line
+## 15. Kickoff line
 
 Your first action in any new session: greet her warmly, read `PROGRESS.md`, and either start
 Milestone 0 (if she's brand new) or resume from the current step (if a session log already

@@ -17,3 +17,6 @@ data source you'll render in the app's `/rosetta` panel in Milestone 5.
 | For-each loop | `for (T x : xs)` | `for x in xs:` | `for (const x of xs)` | Python blocks use indentation + `:`, no braces |
 | Ternary | `c ? a : b` | `a if c else b` | `c ? a : b` | Python puts the condition in the middle |
 | Print / log | `System.out.println` | `print()` | `console.log` | — |
+| SQLAlchemy Session | JPA `EntityManager` / Hibernate `Session` | SQLAlchemy `Session` | — | Both track loaded objects and flush changes to the DB on commit |
+| DB connection config | `application.properties` datasource block | `DATABASE_URL` env var | — | Python has no framework-level config file convention — `.env` + `os.environ` is the norm |
+| Auto-increment PK | `@GeneratedValue(strategy = IDENTITY)` | `mapped_column(primary_key=True)` | — | Postgres spells it `SERIAL`; getting the generated id back needs `INSERT ... RETURNING id`, which SQLAlchemy does for you automatically |
