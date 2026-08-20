@@ -59,8 +59,8 @@ to stop feeling slow in Python and React, this is exactly it.
   then a `docker-compose.yml` running both together, inside an isolated sandbox.
 - **Capstone — Working with Claude Code at scale.** A short exercise in delegating work to
   subagents and using project memory (`CLAUDE.md`), using the app you just built as the example.
-- **Stretch — SQLite + SQLAlchemy persistence.** Swap the in-memory repository for a real
-  database without changing its interface.
+- **Stretch — Postgres + SQLAlchemy persistence.** Swap the in-memory repository for a real
+  Postgres server without changing its interface.
 
 ## After the course
 
@@ -97,7 +97,7 @@ Then either:
 
 ## Tech stack
 
-- **Backend:** FastAPI + Pydantic, in-memory dict repository to start; SQLite via SQLAlchemy is
+- **Backend:** FastAPI + Pydantic, in-memory dict repository to start; Postgres via SQLAlchemy is
   an optional stretch milestone once the core app works.
 - **Frontend:** React + TypeScript + Vite.
 
