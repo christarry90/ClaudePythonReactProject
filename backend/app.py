@@ -4,6 +4,7 @@ from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 from pathlib import Path
 
+
 class Tag(BaseModel):
     id: int
     name: str
@@ -215,7 +216,9 @@ class TagService:
 # Module-level singleton: Depends() creates a *new* TaskService per request,
 # but every request needs to see the *same* tasks, so the repository itself
 # has to live outside the per-request-created objects.
-_repository = TaskRepository()
+from postgres_task_repository import PostgresTaskRepository
+
+_repository = PostgresTaskRepository()
 _tag_repository = TagRepository()
 _tasktag_repository = TaskTagRepository()
 
