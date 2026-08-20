@@ -4,7 +4,8 @@ The tutor (see `TUTOR_PROMPT.md`) reads this file at the start of every session 
 you are, and updates it at the end of every session. You're welcome to edit it yourself too —
 it's your progress, not a black box.
 
-**Current milestone:** NEXT_STEPS Path A2 — Tags (many-to-many) on Tasks (in progress)
+**Current milestone:** Stretch — Postgres + SQLAlchemy persistence (in progress; switched over
+from NEXT_STEPS Path A2 — Tags, which is paused with only the frontend remaining, see below)
 
 **Current step:** Building NEXT_STEPS Path A2 (Tags, many-to-many) on `backend/app.py`. She chose
 Tags over Projects specifically because she correctly identified it as the harder relational-
@@ -89,14 +90,20 @@ Frontend URL: `https://code.wakehub.org/absproxy/5173/` or `code.home.wakehub.or
 `/proxy/8000/...` (relative path — note `/proxy/`, not `/absproxy/`, since FastAPI's plain
 route paths need the prefix stripped before it reaches them, unlike Vite).
 
-**Next action:** Resume NEXT_STEPS Path A2 (Tags) with the frontend — the entire backend (models,
-all three repositories, TaskService/TagService composition + hydration, all `/tags` + attach/
-detach routes) is done and verified live over HTTP. Build: `Tag` type in `types.ts`, nested
-`tags: Tag[]` on `Task`, render tags in `TaskItem.tsx`, and UI to attach/detach a tag from a task
-(fetch calls to the new `POST`/`DELETE /tasks/{task_id}/tags/{tag_id}` routes). This is the
-harder React state shape NEXT_STEPS.md flagged ("a list of lists"). Course milestones + Capstone
-are otherwise fully done — `NEXT_STEPS.md`'s other paths (A1 auth, A3 deploy, B portfolio polish,
-C interview prep, D Docker/K8s) remain open any time after A2.
+**Next action:** Working the new Stretch milestone (`TUTOR_PROMPT.md` Section 13 — Postgres +
+SQLAlchemy, which replaced the old SQLite stretch via PR #15, merged into `main` before this
+session). Start with `db on` in Discord, confirm via `psql`, then Steps 1–6 per Section 13 (raw
+`psql` round trip, SQLAlchemy model + `backend/.env`, new repository implementation, DI-only
+swap, persistence-proof exercise, commit+push to `mine`).
+
+**Paused, resume after the stretch completes:** NEXT_STEPS Path A2 (Tags) — backend is fully done
+and verified live over HTTP (models, all three repositories, TaskService/TagService composition +
+hydration, all `/tags` + attach/detach routes). Only the frontend remains: `Tag` type in
+`types.ts`, nested `tags: Tag[]` on `Task`, render tags in `TaskItem.tsx`, and UI to attach/detach
+a tag from a task (fetch calls to `POST`/`DELETE /tasks/{task_id}/tags/{tag_id}`) — the harder
+React state shape NEXT_STEPS.md flagged ("a list of lists"). Course milestones + Capstone are
+otherwise fully done — `NEXT_STEPS.md`'s other paths (A1 auth, A3 deploy, B portfolio polish, C
+interview prep, D Docker/K8s) remain open any time after A2/stretch.
 
 ## Milestone checklist
 

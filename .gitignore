@@ -16,3 +16,4 @@ dist/
 core.[0-9]*
 # Local-only infra/debugging notes (see TUTOR_PROMPT.md Session protocol) — never pushed
 ENVIRONMENT_LOG.md
+.env

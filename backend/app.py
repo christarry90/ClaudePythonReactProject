@@ -4,7 +4,6 @@ from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 from pathlib import Path
 
-
 class Tag(BaseModel):
     id: int
     name: str
