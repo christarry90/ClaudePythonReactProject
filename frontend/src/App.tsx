@@ -121,8 +121,6 @@ async function handleDetachTag(task_id: number, tag_id: number) {
     );
 }
 
-const availableTags = tags.filter((tag) => !tasks.tags.some((t) => t.tag_id === tag.id)
-
   return (
     <>
     <div className="app">
