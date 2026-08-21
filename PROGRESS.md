@@ -4,10 +4,30 @@ The tutor (see `TUTOR_PROMPT.md`) reads this file at the start of every session 
 you are, and updates it at the end of every session. You're welcome to edit it yourself too —
 it's your progress, not a black box.
 
-**Current milestone:** Stretch — Postgres + SQLAlchemy persistence — **complete**. Resuming
-NEXT_STEPS Path A2 (Tags) frontend next, see below.
+**Current milestone:** NEXT_STEPS Path A2 (Tags) — **complete** (backend + frontend). Course
+milestones, Capstone, the Postgres stretch, and A2 are all now fully done. Next up is her choice
+from `NEXT_STEPS.md`'s remaining paths (A1 auth, A3 deploy, B portfolio polish, C interview prep,
+D Docker/K8s) — nothing in progress right now.
 
-**Current step:** Stretch complete end-to-end. Step 3 (`backend/postgres_task_repository.py`)
+**A2 (Tags) frontend — complete:** Added `Tag` interface + nested `tags: Tag[]` on `Task` in
+`types.ts` (no forward-reference issue like Python's — TS interfaces aren't runtime values, order
+doesn't matter, good contrast point). `TaskItem.tsx` renders each tag with a detach button;
+caught a `.map()` variable-shadowing bug (naming the callback param `task`, same name as the outer
+prop, when each item is actually a `Tag`) and an empty `{}` JSX expression. Built the attach UI
+with `availableTags = allTags.filter(...)` — she wrote the filter/some logic unaided; caught two
+real bugs: the `.map()` for available tags was initially a bare statement outside the returned
+JSX (never rendered) instead of inside it, and a generic "Attach Tag" label that didn't indicate
+*which* tag each button attached (fixed to show `tag.name`). Threaded `allTags`/`onAttach`/
+`onDetach` down through `App.tsx` → `TaskList.tsx` → `TaskItem.tsx`, mirroring the existing
+`tasks`/`onToggle`/`onDelete` prop pattern; caught a duplicate-function-name bug (`handleAttachTag`
+defined twice, second should've been `handleDetachTag`) and leftover copy-pasted
+`body: JSON.stringify({completed: ...})` cruft on both handlers (the attach/detach routes take no
+body — task_id/tag_id are path params only). Verified live in browser: attach/detach both update
+the UI without a reload. Note: only `TaskRepository` is Postgres-backed from the stretch milestone
+— `TagRepository`/`TaskTagRepository` are still in-memory, so tags and attachments (unlike tasks)
+still don't survive a backend restart. Committed and pushed to `mine`.
+
+**Postgres + SQLAlchemy stretch — complete:** Step 3 (`backend/postgres_task_repository.py`)
 finished: `add`/`get`/`list`/`update`/`delete` all written and verified live against real
 Postgres (caught: invalid `from db import db.X` import syntax → `import db`; bare module-level
 functions with `self` but no class → wrapped in `PostgresTaskRepository`; `Task(id=db_task.title,
@@ -26,19 +46,15 @@ via HTTP, `db off` in Discord → `/tasks` correctly 500s, `db on` → task conf
 Step 6: committed (`app.py` + `postgres_task_repository.py`, her own commit message) and pushed
 to `mine` — the `gh auth setup-git` fix from the earlier GitHub-push session held up cleanly.
 
-**A2 (Tags) recap:** Backend fully complete and verified live over HTTP — data layer
-(`Tag`/`TagCreate`/`TagUpdate`, `TagRepository`, `TaskTagRepository`), `TaskService`/`TagService`
-composition with tag hydration (`_hydrate_tasks` helper, her own unprompted DRY extraction), and
-all `/tags` CRUD + attach/detach routes (`POST`/`DELETE /tasks/{task_id}/tags/{tag_id}`, her own
-route-shape design). Notable bugs caught along the way: the missing-`self.`-on-method-call gotcha
-recurred three times across two sessions (flag proactively next time rather than waiting for a
-fourth); a real conceptual bug treating "no tags yet" as a 404 instead of a normal empty state;
-a route-collision bug where attach/detach were both first registered as `@app.post` on the
-identical path. Only the frontend remains (`Tag` type, nested `tags: Tag[]` on `Task`,
-`TaskItem.tsx` rendering, attach/detach UI — NEXT_STEPS.md's "list of lists," harder than M3–M4)
-— resume after the Postgres stretch completes. Whether `Tag` deletion should cascade/clean up
-`TaskTagRepository` entries is still open (correctly placed at the service layer, not implemented,
-not blocking frontend work).
+**A2 (Tags) backend recap:** Data layer (`Tag`/`TagCreate`/`TagUpdate`, `TagRepository`,
+`TaskTagRepository`), `TaskService`/`TagService` composition with tag hydration (`_hydrate_tasks`
+helper, her own unprompted DRY extraction), and all `/tags` CRUD + attach/detach routes
+(`POST`/`DELETE /tasks/{task_id}/tags/{tag_id}`, her own route-shape design). Notable bugs caught:
+the missing-`self.`-on-method-call gotcha recurred three times across two sessions; a real
+conceptual bug treating "no tags yet" as a 404 instead of a normal empty state; a route-collision
+bug where attach/detach were both first registered as `@app.post` on the identical path. Whether
+`Tag` deletion should cascade/clean up `TaskTagRepository` entries is still open (correctly placed
+at the service layer, not implemented, not currently blocking anything).
 
 **M6 recap:** Backend and frontend fully containerized (`backend/Dockerfile`, `frontend/Dockerfile`
 multi-stage build, `frontend/nginx.conf` reverse-proxying `/proxy/8000/` to `backend:8000`,
@@ -71,16 +87,15 @@ Frontend URL: `https://code.wakehub.org/absproxy/5173/` or `code.home.wakehub.or
 `/proxy/8000/...` (relative path — note `/proxy/`, not `/absproxy/`, since FastAPI's plain
 route paths need the prefix stripped before it reaches them, unlike Vite).
 
-**Next action:** Resume NEXT_STEPS Path A2 (Tags) — backend is fully done and verified live over
-HTTP (models, all three repositories, TaskService/TagService composition + hydration, all `/tags`
-+ attach/detach routes). Only the frontend remains: `Tag` type in `types.ts`, nested `tags: Tag[]`
-on `Task`, render tags in `TaskItem.tsx`, and UI to attach/detach a tag from a task (fetch calls to
-`POST`/`DELETE /tasks/{task_id}/tags/{tag_id}`) — the harder React state shape NEXT_STEPS.md
-flagged ("a list of lists"). Note: the frontend currently fetches against the in-memory-repository
-era backend, now Postgres-backed — no frontend changes needed for that, just worth a mention that
-data now persists across backend restarts. Course milestones + Capstone + the Postgres stretch are
-all now fully done — after A2, `NEXT_STEPS.md`'s other paths (A1 auth, A3 deploy, B portfolio
-polish, C interview prep, D Docker/K8s) are open any time.
+**Next action:** Everything currently planned is done — course milestones, Capstone, the Postgres
+stretch, and NEXT_STEPS Path A2 (Tags, backend + frontend) are all complete and pushed to `mine`.
+Next session, ask her which of `NEXT_STEPS.md`'s remaining paths she wants: A1 (auth), A3
+(deploy), B (portfolio polish), C (interview prep), or D (Docker volumes/K8s primer). Also worth
+a proactive mention early next session: `TagRepository`/`TaskTagRepository` are still in-memory
+(only `TaskRepository` got Postgres-backed this stretch) — tags and task-tag attachments don't
+survive a backend restart, only tasks do. Not currently a problem, but worth surfacing if she asks
+why a tag she created "vanished," or if a future stretch wants to extend Postgres coverage to
+those two repositories as well.
 
 ## Milestone checklist
 
@@ -100,6 +115,7 @@ polish, C interview prep, D Docker/K8s) are open any time.
       field end-to-end, created first `CLAUDE.md` entry, covered permission-mode calibration)
 - [x] Stretch — Postgres + SQLAlchemy persistence (real Postgres-backed `TaskRepository`,
       DI-swapped in with zero route/service changes, persistence proven via `db off`/`db on`)
+- [x] NEXT_STEPS Path A2 — Tags (many-to-many), backend + frontend both complete
 
 ## Session log
 
@@ -290,3 +306,28 @@ boundary held. Step 5: persistence proven live (create via HTTP → db off → 5
 Step 6: committed and pushed to mine — the earlier gh auth setup-git fix held up. Postgres +
 SQLAlchemy stretch is now fully complete. Next: resume NEXT_STEPS Path A2 (Tags) frontend — Tag
 type, nested tags on Task, TaskItem rendering, attach/detach UI.
+2026-08-21 — New session: restarted both dev servers (neither persistent, as usual) and hit
+Postgres being down too (sandbox timeout between sessions, not a code issue) — needed `db on` in
+Discord before the backend would even import (`db.py`'s module-level `create_all` fails hard if
+Postgres is unreachable, so the whole app.py import chain broke, not just DB routes — worth
+remembering as a diagnostic shortcut). Finished NEXT_STEPS Path A2 (Tags) frontend, completing
+the feature end-to-end. types.ts: added Tag interface + nested tags: Tag[] on Task (used as a
+moment to contrast with the earlier Python forward-reference bug — TS interfaces are type-only,
+declaration order doesn't matter). TaskItem.tsx: rendered tags with a detach button (caught a
+.map() shadowing bug — naming the callback param `task` when each item is actually a `Tag`, and
+an empty `{}` JSX expression), then built the attach picker via `availableTags = allTags.filter
+(tag => !task.tags.some(t => t.id === tag.id))` — she wrote this unaided. Caught two real bugs:
+the availableTags .map() was initially a bare statement outside the returned JSX (never actually
+rendered) instead of inside it, and every attach button initially read "Attach Tag" with no way
+to tell which tag each one attached (fixed to show tag.name). Threaded allTags/onAttach/onDetach
+through App.tsx → TaskList.tsx → TaskItem.tsx mirroring the existing tasks/onToggle/onDelete
+pattern; caught a duplicate function name (handleAttachTag defined twice, second should've been
+handleDetachTag) and leftover copy-pasted `body: JSON.stringify({completed: ...})` cruft on both
+handlers (attach/detach routes take no body, just path params). Verified live in browser — attach
+and detach both update the UI instantly. Also surfaced mid-session: only TaskRepository is
+Postgres-backed from the stretch; TagRepository/TaskTagRepository are still in-memory, so a tag
+created earlier in the session was lost when the backend restarted (recreated fresh tags for the
+live test) — flagged to her as expected, not a bug. Committed and pushed to mine. Course
+milestones, Capstone, the Postgres stretch, and A2 are now all complete. Next: her choice from
+NEXT_STEPS.md's remaining paths (A1 auth, A3 deploy, B portfolio polish, C interview prep, D
+Docker/K8s).
