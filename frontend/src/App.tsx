@@ -5,10 +5,13 @@ import AddTaskForm from './AddTaskForm';
 import { useEffect } from 'react';
 import Rosetta from './Rosetta';
 import './App.css'
+import type { Tag } from './types';
 
 function App() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [showRosetta, setShowRosetta] = useState(false);
+  const [tags, setTags] = useState<Tag[]>([]);
+
   useEffect(() => {
     async function fetchTasks() {
       try {
@@ -28,6 +31,24 @@ function App() {
     fetchTasks();
   }, []);
 
+  useEffect(() => {
+    async function fetchTags() {
+      try {
+        const response = await fetch('/proxy/8000/tags');
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch tags');
+        }
+
+        const data: Tag[] = await response.json();
+        setTags(data);
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
+    fetchTags();
+  }, []);
 
   async function handleToggle(id: number) {
     const task = tasks.find((t) => t.id === id)
@@ -72,6 +93,36 @@ async function handleAddTask(title: string, priority: 'low' | 'medium' | 'high')
   setTasks((prev) => [...prev, data]);
 }
 
+async function handleAttachTag(task_id: number, tag_id: number) {
+    const response = await fetch(`/proxy/8000/tasks/${task_id}/tags/${tag_id}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json'}, 
+        })
+
+    const data: Task = await response.json();
+    setTasks((prev) => 
+      prev.map((t) =>
+        t.id === data.id ? data : t
+      )
+    );
+}
+
+async function handleDetachTag(task_id: number, tag_id: number) {
+    const response = await fetch(`/proxy/8000/tasks/${task_id}/tags/${tag_id}`, {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json'},
+        })
+
+    const data: Task = await response.json();
+    setTasks((prev) => 
+      prev.map((t) =>
+        t.id === data.id ? data : t
+      )
+    );
+}
+
+const availableTags = tags.filter((tag) => !tasks.tags.some((t) => t.tag_id === tag.id)
+
   return (
     <>
     <div className="app">
@@ -88,6 +139,9 @@ async function handleAddTask(title: string, priority: 'low' | 'medium' | 'high')
             tasks={tasks}
             onToggle={handleToggle}
             onDelete={handleDelete}
+            onAttach={handleAttachTag}
+            onDetach={handleDetachTag}
+            allTags={tags}
           />
         </>
       )}
