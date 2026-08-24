@@ -9,6 +9,17 @@ milestones, Capstone, the Postgres stretch, and A2 are all now fully done. Next 
 from `NEXT_STEPS.md`'s remaining paths (A1 auth, A3 deploy, B portfolio polish, C interview prep,
 D Docker/K8s) — nothing in progress right now.
 
+**New this session — heads up:** a new **AWS Cloud Fundamentals + Kubernetes** course is now
+available. It's a separate repo, already cloned into this same sandbox at `~/aws-fundamentals`
+(now visible as a second root folder alongside `~/project` — both open automatically). To start
+it: open the `~/aws-fundamentals` folder and say 'start the tutor' there, same as here. It uses
+its own Discord-toggled AWS sandbox (floci, a local AWS emulator) — message `aws on` to start it
+and `aws off` when done, the same pattern as this course's `db on`/`db off`. Full writeup in
+`NEXT_STEPS.md` Path E. **Tutor: mention this once at the start of the next session, then remove
+this paragraph from PROGRESS.md as part of your normal end-of-session update — it only needs to
+be said once.**
+
+
 **A2 (Tags) frontend — complete:** Added `Tag` interface + nested `tags: Tag[]` on `Task` in
 `types.ts` (no forward-reference issue like Python's — TS interfaces aren't runtime values, order
 doesn't matter, good contrast point). `TaskItem.tsx` renders each tag with a detach button;
