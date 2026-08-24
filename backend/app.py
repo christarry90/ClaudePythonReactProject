@@ -4,7 +4,6 @@ from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 from pathlib import Path
 from passlib.context import CryptContext
-from postgres_user_repository import PostgresUserRepository
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -223,6 +222,7 @@ class TagService:
         if not self._tag_repository.delete(tag_id):
             raise HTTPException(status_code=404, detail=f"Tag {tag_id} not found")
 
+from postgres_user_repository import PostgresUserRepository
 
 class UserService:
     def __init__(self, user_repository: PostgresUserRepository):
