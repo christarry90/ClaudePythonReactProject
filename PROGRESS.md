@@ -11,13 +11,24 @@ D Docker/K8s) — nothing in progress right now.
 
 **New this session — heads up:** a new **AWS Cloud Fundamentals + Kubernetes** course is now
 available. It's a separate repo, already cloned into this same sandbox at `~/aws-fundamentals`
-(now visible as a second root folder alongside `~/project` — both open automatically). To start
-it: open the `~/aws-fundamentals` folder and say 'start the tutor' there, same as here. It uses
-its own Discord-toggled AWS sandbox (floci, a local AWS emulator) — message `aws on` to start it
-and `aws off` when done, the same pattern as this course's `db on`/`db off`. Full writeup in
-`NEXT_STEPS.md` Path E. **Tutor: mention this once at the start of the next session, then remove
-this paragraph from PROGRESS.md as part of your normal end-of-session update — it only needs to
-be said once.**
+(now visible as a second root folder alongside `~/project` — both open automatically). It has its
+own tutor prompt and its own progress tracker — it's a separate curriculum, not a continuation of
+this conversation.
+
+Walk her through this handoff live, step by step, not just as a mention:
+1. Open a new terminal tab (the `+` in the terminal panel, or Terminal → New Terminal).
+2. `cd ~/aws-fundamentals`
+3. Run `claude` to start a fresh Claude Code session scoped to that folder.
+4. Say exactly: "Read TUTOR_PROMPT.md and start the tutor." (Being in that folder is what
+   disambiguates which `TUTOR_PROMPT.md` she means — this workspace has two now.)
+
+It uses its own Discord-toggled AWS sandbox (floci, a local AWS emulator) — message `aws on` to
+start it and `aws off` when done, the same pattern as this course's `db on`/`db off`. Full
+writeup in `NEXT_STEPS.md` Path E.
+
+**Tutor: walk her through the 4 steps above once, live, at the start of the next session — don't
+just mention it in passing. Then remove this whole section from PROGRESS.md as part of your
+normal end-of-session update; it only needs to happen once.**
 
 
 **A2 (Tags) frontend — complete:** Added `Tag` interface + nested `tags: Tag[]` on `Task` in
