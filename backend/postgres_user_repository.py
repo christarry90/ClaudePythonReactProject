@@ -1,5 +1,6 @@
-from app import User, UserCreate
+from app import User, UserCreate, UserInDb
 import db
+
 
 class PostgresUserRepository:
     def add(self, username: str, hashed_password: str) -> User:
@@ -19,3 +20,10 @@ class PostgresUserRepository:
             if db_user is None:
                 return None
             return User(id=db_user.id, username=db_user.username)
+
+    def get_by_username_with_password(self, username: str) -> UserInDb | None:
+        with db.SessionLocal() as session:
+            db_user = session.query(db.User).filter(db.User.username == username).first()
+            if db_user is None:
+                return None
+            return UserInDb(id=db_user.id, username=db_user.username, hashed_password=db_user.hashed_password)

@@ -4,8 +4,23 @@ from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 from pathlib import Path
 from passlib.context import CryptContext
+from jose import jwt
+from datetime import datetime, timedelta
+import os
+from dotenv import load_dotenv
+from fastapi.security import OAuth2PasswordRequestForm
+from fastapi.security import OAuth2PasswordBearer
+from jose import JWTError
 
+load_dotenv()
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+SECRET_KEY = os.environ["SECRET_KEY"]
+ALGORITHM = "HS256"
+
+def create_access_token(data: dict) -> str:
+    expire = datetime.utcnow() + timedelta(hours=1)
+    to_encode = {**data, "exp": expire}
+    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
 class UserCreate(BaseModel):
     username: str
@@ -14,6 +29,12 @@ class UserCreate(BaseModel):
 class User(BaseModel):
     id: int
     username: str
+
+class UserInDb(BaseModel):
+    id: int
+    username: str
+    hashed_password: str
+
 
 class Tag(BaseModel):
     id: int
@@ -235,6 +256,20 @@ class UserService:
         
         hashed_password = pwd_context.hash(create_user.password)
         return self._user_repository.add(create_user.username, hashed_password)
+
+    def login(self, username: str, password: str) -> str:
+        user_db = self._user_repository.get_by_username_with_password(username)
+        if user_db is None:
+            raise HTTPException(status_code=401, detail="Invalid username or password")
+        if not pwd_context.verify(password, user_db.hashed_password):
+            raise HTTPException(status_code=401, detail="Invalid username or password")
+        return create_access_token({"sub": username})
+
+    def get_user_by_username(self, username: str) -> User:
+        user = self._user_repository.get_by_username(username)
+        if user is None:
+            raise HTTPException(status_code=404, detail=f"Username {username} not found")
+        return user
         
 
 
@@ -248,7 +283,7 @@ _repository = PostgresTaskRepository()
 _tag_repository = TagRepository()
 _tasktag_repository = TaskTagRepository()
 _user_repository = PostgresUserRepository()
-
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
 def get_task_service() -> TaskService:
     return TaskService(_repository, _tag_repository, _tasktag_repository)
@@ -258,6 +293,14 @@ def get_tag_service() -> TagService:
 
 def get_user_service() -> UserService:
     return UserService(_user_repository)
+
+def get_current_user(token: str = Depends(oauth2_scheme), service: UserService = Depends(get_user_service)) -> User:
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username= payload.get("sub")
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Could not validate credentials")
+    return service.get_user_by_username(username)
 
 app = FastAPI()
 
@@ -333,3 +376,12 @@ def detach_tag(task_id: int, tag_id: int, service: TaskService = Depends(get_tas
 @app.post("/user", response_model=User, status_code=201)
 def signup(create_user: UserCreate, service: UserService = Depends(get_user_service)):
     return service.create_user(create_user)
+
+@app.post("/login")
+def login(form_data: OAuth2PasswordRequestForm = Depends(), service: UserService = Depends(get_user_service)):
+    token = service.login(form_data.username, form_data.password)
+    return {"access_token": token, "token_type": "bearer"}
+
+@app.get("/me", response_model=User)
+def read_me(current_user: User = Depends(get_current_user)):
+    return current_user

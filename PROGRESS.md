@@ -4,10 +4,11 @@ The tutor (see `TUTOR_PROMPT.md`) reads this file at the start of every session 
 you are, and updates it at the end of every session. You're welcome to edit it yourself too —
 it's your progress, not a black box.
 
-**Current milestone:** NEXT_STEPS Path A2 (Tags) — **complete** (backend + frontend). Course
-milestones, Capstone, the Postgres stretch, and A2 are all now fully done. Next up is her choice
-from `NEXT_STEPS.md`'s remaining paths (A1 auth, A3 deploy, B portfolio polish, C interview prep,
-D Docker/K8s) — nothing in progress right now.
+**Current milestone:** NEXT_STEPS Path A1 (Authentication) — **in progress**. She chose A1 over
+A3/B/C. Steps 1–4 of a self-designed 6-step plan are done and verified live (users table, signup
+w/ hashed passwords, login issuing a JWT, `get_current_user` dependency proving a protected `/me`
+route). Steps 5 (scope tasks to the signed-in user) and 6 (frontend login/signup + auth headers)
+remain. Changes are uncommitted — she paused mid-feature and hasn't asked to commit yet.
 
 **New this session — heads up:** a new **AWS Cloud Fundamentals + Kubernetes** course is now
 available. It's a separate repo, already cloned into this same sandbox at `~/aws-fundamentals`
@@ -109,15 +110,15 @@ Frontend URL: `https://code.wakehub.org/absproxy/5173/` or `code.home.wakehub.or
 `/proxy/8000/...` (relative path — note `/proxy/`, not `/absproxy/`, since FastAPI's plain
 route paths need the prefix stripped before it reaches them, unlike Vite).
 
-**Next action:** Everything currently planned is done — course milestones, Capstone, the Postgres
-stretch, and NEXT_STEPS Path A2 (Tags, backend + frontend) are all complete and pushed to `mine`.
-Next session, ask her which of `NEXT_STEPS.md`'s remaining paths she wants: A1 (auth), A3
-(deploy), B (portfolio polish), C (interview prep), or D (Docker volumes/K8s primer). Also worth
-a proactive mention early next session: `TagRepository`/`TaskTagRepository` are still in-memory
-(only `TaskRepository` got Postgres-backed this stretch) — tags and task-tag attachments don't
-survive a backend restart, only tasks do. Not currently a problem, but worth surfacing if she asks
-why a tag she created "vanished," or if a future stretch wants to extend Postgres coverage to
-those two repositories as well.
+**Next action:** Resume NEXT_STEPS Path A1 (Authentication) at Step 5 — scope tasks to the
+signed-in user (`user_id` FK on the `tasks` table, `TaskRepository`/`TaskService` filter/set by
+owner, protect all task routes with `get_current_user`). Step 6 after that: frontend login/signup
+forms, store the token, attach `Authorization: Bearer` to every fetch, gate the UI when logged
+out. Also still owed from before this session: walk her through the AWS Cloud Fundamentals +
+Kubernetes course handoff (see the "New this session — heads up" section above) — she asked to
+defer it again, still not done. Also worth a proactive mention: `TagRepository`/`TaskTagRepository`
+are still in-memory (only `TaskRepository` got Postgres-backed) — tags and task-tag attachments
+don't survive a backend restart, only tasks do.
 
 ## Milestone checklist
 
@@ -353,3 +354,43 @@ live test) — flagged to her as expected, not a bug. Committed and pushed to mi
 milestones, Capstone, the Postgres stretch, and A2 are now all complete. Next: her choice from
 NEXT_STEPS.md's remaining paths (A1 auth, A3 deploy, B portfolio polish, C interview prep, D
 Docker/K8s).
+2026-08-24 — New session: chose NEXT_STEPS Path A1 (Authentication) over A3/B/C. Deferred the
+AWS Cloud Fundamentals handoff (queued in PROGRESS.md from last session) to a future session at
+her request — not done yet, still owed. Designed a self-paced 6-step plan for A1 (users table;
+signup w/ hashing; login issuing a JWT; get_current_user dependency; scope tasks to owner;
+frontend). Completed Steps 1–4. Step 1: `User` SQLAlchemy model in db.py (id, username w/
+`unique=True` she added unprompted, hashed_password). Step 2 (signup): `UserCreate`/`User`
+Pydantic models (caught reusing `id`/`hashed_password` on UserCreate before realizing the client
+sends a plaintext password, hashing happens server-side); hit and fixed a real passlib/bcrypt 5.x
+incompatibility (pinned `bcrypt<4.1` in requirements.txt — environment issue, fixed directly, not
+a lesson item); built `PostgresUserRepository` (caught a garbled `db_tdb_userask` typo, a wrong
+`session.get()` primary-key lookup used for a username lookup — introduced `.filter()`/`.first()`
+as new syntax to fix it, and a leftover `hashed_password` kwarg on the public `User` model);
+`UserService.create_user` (duplicate-username check via `get_by_username` + `HTTPException(400)`,
+then hash + repository.add — she designed the check-then-create flow largely unaided) hit a missing
+`__init__`; DI wiring hit the same *class* of circular-import bug as the Postgres stretch, but not
+identical — this time `UserService.__init__`'s own type hint needed `PostgresUserRepository`
+before the class body was evaluated, so the import had to move above `class UserService`, not just
+above the singleton line; she reasoned through the distinction correctly once pointed at where
+`User`/`UserCreate` are actually defined in the file. Also hit and fixed a stale `users` table in
+Postgres (created before `hashed_password` was added to the model — `create_all()` doesn't ALTER
+existing tables, only creates missing ones; dropped it via psql and restarted the server so
+`create_all()` rebuilt it). Verified signup live (201, duplicate correctly 400s). Step 3 (login):
+added `python-jose[cryptography]` + `python-multipart`, a `SECRET_KEY` in `.env` (cleaned up a
+stray line of stray leftover text that had gotten mashed into that file), `create_access_token`
+(given as new syntax). Hit a real bug worth flagging: `SECRET_KEY = os.environ["SECRET_KEY"]` ran
+before `.env` was ever loaded, because the only `load_dotenv()` call lived in `db.py`, imported
+much later in the file — fixed by calling `load_dotenv()` directly in `app.py` rather than relying
+on that import-order side effect. Designed `UserInDb` (internal-only model incl. hashed_password,
+vs. the public `User`) after being prompted to think about how login verifies a password it
+doesn't have access to via the public model — a real, worthwhile design pattern, not busywork.
+`UserService.login` caught a serious bug: `pwd_context.verify(...)`'s return value was never
+checked, so a wrong password would have logged the user in anyway. `POST /login` via
+`OAuth2PasswordRequestForm` (new syntax) verified live: correct creds → real JWT, wrong password
+and nonexistent user both → identical `401 Invalid username or password` (she reasoned through
+username-enumeration risk unprompted). Step 4: `get_current_user` via `OAuth2PasswordBearer` +
+`jwt.decode`/`JWTError` (new syntax; caught a `from jwt import JWTError` bug — should be `from
+jose import JWTError`, no separate `jwt` package installed) plus a `GET /me` protected route.
+Verified live: valid token → user, no token → 401, garbage token → 401. Paused before Step 5
+(scoping tasks to the owner) at her request. Nothing committed this session — she hasn't asked
+yet.
