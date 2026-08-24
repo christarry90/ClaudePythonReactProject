@@ -3,7 +3,18 @@ from fastapi import Depends, FastAPI, HTTPException
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 from pathlib import Path
+from passlib.context import CryptContext
+from postgres_user_repository import PostgresUserRepository
 
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+class UserCreate(BaseModel):
+    username: str
+    password: str
+
+class User(BaseModel):
+    id: int
+    username: str
 
 class Tag(BaseModel):
     id: int
@@ -213,14 +224,30 @@ class TagService:
             raise HTTPException(status_code=404, detail=f"Tag {tag_id} not found")
 
 
+class UserService:
+    def __init__(self, user_repository: PostgresUserRepository):
+        self._user_repository = user_repository
+
+    def create_user(self, create_user: UserCreate) -> User:
+        user = self._user_repository.get_by_username(create_user.username)
+        if user is not None:
+            raise HTTPException(status_code=400, detail="Username already taken")
+        
+        hashed_password = pwd_context.hash(create_user.password)
+        return self._user_repository.add(create_user.username, hashed_password)
+        
+
+
 # Module-level singleton: Depends() creates a *new* TaskService per request,
 # but every request needs to see the *same* tasks, so the repository itself
 # has to live outside the per-request-created objects.
 from postgres_task_repository import PostgresTaskRepository
 
+
 _repository = PostgresTaskRepository()
 _tag_repository = TagRepository()
 _tasktag_repository = TaskTagRepository()
+_user_repository = PostgresUserRepository()
 
 
 def get_task_service() -> TaskService:
@@ -228,6 +255,9 @@ def get_task_service() -> TaskService:
 
 def get_tag_service() -> TagService:
     return TagService(_tag_repository)
+
+def get_user_service() -> UserService:
+    return UserService(_user_repository)
 
 app = FastAPI()
 
@@ -299,3 +329,7 @@ def attach_tag(task_id: int, tag_id: int, service: TaskService = Depends(get_tas
 @app.delete("/tasks/{task_id}/tags/{tag_id}", response_model=Task)
 def detach_tag(task_id: int, tag_id: int, service: TaskService = Depends(get_task_service)):
     return service.detach_tag(task_id, tag_id)
+
+@app.post("/user", response_model=User, status_code=201)
+def signup(create_user: UserCreate, service: UserService = Depends(get_user_service)):
+    return service.create_user(create_user)
