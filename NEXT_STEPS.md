@@ -145,10 +145,17 @@ different audience moment) that it got its own curriculum rather than another bu
   different ways.
 - **Rough scope:** comparable to this whole course, milestone by milestone — not a single
   evening's detour.
-- **Getting started:** clone `github.com/jerrinss5/aws-cloud-fundamentals`, open it in this same
-  code-server environment (it's a separate top-level folder — `~/aws-fundamentals`, alongside
-  this repo's `~/project`), and say "start the tutor" the same way you did here. `aws on`/`aws
-  off` toggles the AWS sandbox via Discord, same pattern as `db on`/`db off`.
+- **Getting started:** it's already cloned into this same code-server environment — a separate
+  top-level folder, `~/aws-fundamentals`, alongside this repo's `~/project`. It has its own tutor
+  prompt and its own progress tracker, so it needs its own Claude Code session, not a continuation
+  of this one:
+  1. Open a new terminal tab (the `+` in the terminal panel, or Terminal → New Terminal).
+  2. `cd ~/aws-fundamentals`
+  3. Run `claude` to start a fresh session scoped to that folder.
+  4. Say exactly: "Read TUTOR_PROMPT.md and start the tutor." (Being in that folder is what
+     disambiguates which `TUTOR_PROMPT.md` you mean — this workspace has two now.)
+
+  `aws on`/`aws off` toggles the AWS sandbox via Discord, same pattern as `db on`/`db off`.
 - **Pick this if:** you want to round out the infra/ops side of your skill set beyond app code —
   this is genuinely new territory (AWS, and separately Kubernetes), not more reps on things
   you've already built.
