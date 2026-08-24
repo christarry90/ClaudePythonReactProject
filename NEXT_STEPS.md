@@ -129,10 +129,35 @@ independent pieces; do one or both, in any order.
   this same app to it. This is a fully self-directed side quest — `PROGRESS.md` and
   `TUTOR_PROMPT.md` won't track it, and that's fine.
 
+## Path E — AWS Cloud Fundamentals + Kubernetes
+
+A separate repo, not part of this one — cloud infrastructure is different enough content (and a
+different audience moment) that it got its own curriculum rather than another bullet here.
+
+- **What:** hands-on AWS fundamentals (S3, DynamoDB, SQS/SNS, IAM, Lambda, EventBridge, Step
+  Functions, API Gateway, CloudFormation) against a free local AWS emulator (floci) running in
+  the same homelab sandbox you already use — plus a capstone deploying this very Todo app to both
+  Lambda and ECS. Wraps up with a Kubernetes primer and deploying the app to a local `minikube`
+  cluster on your own machine.
+- **What it teaches:** the managed-service equivalents of infra patterns you already know from a
+  backend-dev career (a queue, a relational DB, secrets config, container orchestration) — this
+  time AWS-shaped — plus real serverless-vs-containers tradeoffs from deploying the same app two
+  different ways.
+- **Rough scope:** comparable to this whole course, milestone by milestone — not a single
+  evening's detour.
+- **Getting started:** clone `github.com/jerrinss5/aws-cloud-fundamentals`, open it in this same
+  code-server environment (it's a separate top-level folder — `~/aws-fundamentals`, alongside
+  this repo's `~/project`), and say "start the tutor" the same way you did here. `aws on`/`aws
+  off` toggles the AWS sandbox via Discord, same pattern as `db on`/`db off`.
+- **Pick this if:** you want to round out the infra/ops side of your skill set beyond app code —
+  this is genuinely new territory (AWS, and separately Kubernetes), not more reps on things
+  you've already built.
+
 ## Coming back to this later
 
 If you pick a path from here, treat it the same way the core course worked: predict-then-reveal,
 you write every line, and — if you're back in this environment — `PROGRESS.md` and
-`TUTOR_PROMPT.md` still apply. Just tell the tutor which path (A1/A2/A3/B/C/D) you're starting, so
-it can adjust its Socratic questions to match — the further you get from the guided milestones,
-the more the tutor should lean on "how would you approach this" rather than a fixed lesson plan.
+`TUTOR_PROMPT.md` still apply. Just tell the tutor which path (A1/A2/A3/B/C/D/E) you're starting,
+so it can adjust its Socratic questions to match — the further you get from the guided
+milestones, the more the tutor should lean on "how would you approach this" rather than a fixed
+lesson plan.
