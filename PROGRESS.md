@@ -4,32 +4,11 @@ The tutor (see `TUTOR_PROMPT.md`) reads this file at the start of every session 
 you are, and updates it at the end of every session. You're welcome to edit it yourself too —
 it's your progress, not a black box.
 
-**Current milestone:** NEXT_STEPS Path A1 (Authentication) — **in progress**. She chose A1 over
-A3/B/C. Steps 1–4 of a self-designed 6-step plan are done and verified live (users table, signup
-w/ hashed passwords, login issuing a JWT, `get_current_user` dependency proving a protected `/me`
-route). Steps 5 (scope tasks to the signed-in user) and 6 (frontend login/signup + auth headers)
-remain. Changes are uncommitted — she paused mid-feature and hasn't asked to commit yet.
-
-**New this session — heads up:** a new **AWS Cloud Fundamentals + Kubernetes** course is now
-available. It's a separate repo, already cloned into this same sandbox at `~/aws-fundamentals`
-(now visible as a second root folder alongside `~/project` — both open automatically). It has its
-own tutor prompt and its own progress tracker — it's a separate curriculum, not a continuation of
-this conversation.
-
-Walk her through this handoff live, step by step, not just as a mention:
-1. Open a new terminal tab (the `+` in the terminal panel, or Terminal → New Terminal).
-2. `cd ~/aws-fundamentals`
-3. Run `claude` to start a fresh Claude Code session scoped to that folder.
-4. Say exactly: "Read TUTOR_PROMPT.md and start the tutor." (Being in that folder is what
-   disambiguates which `TUTOR_PROMPT.md` she means — this workspace has two now.)
-
-It uses its own Discord-toggled AWS sandbox (floci, a local AWS emulator) — message `aws on` to
-start it and `aws off` when done, the same pattern as this course's `db on`/`db off`. Full
-writeup in `NEXT_STEPS.md` Path E.
-
-**Tutor: walk her through the 4 steps above once, live, at the start of the next session — don't
-just mention it in passing. Then remove this whole section from PROGRESS.md as part of your
-normal end-of-session update; it only needs to happen once.**
+**Current milestone:** NEXT_STEPS Path A1 (Authentication) — **complete**. All 6 self-designed
+steps done and verified live: users table, signup w/ hashed passwords, login issuing a JWT,
+`get_current_user` dependency protecting `/me`, tasks scoped to the signed-in user (backend), and
+a full frontend login/signup/logout flow with token-gated UI. Changes are still uncommitted — she
+hasn't asked to commit yet.
 
 
 **A2 (Tags) frontend — complete:** Added `Tag` interface + nested `tags: Tag[]` on `Task` in
@@ -110,15 +89,16 @@ Frontend URL: `https://code.wakehub.org/absproxy/5173/` or `code.home.wakehub.or
 `/proxy/8000/...` (relative path — note `/proxy/`, not `/absproxy/`, since FastAPI's plain
 route paths need the prefix stripped before it reaches them, unlike Vite).
 
-**Next action:** Resume NEXT_STEPS Path A1 (Authentication) at Step 5 — scope tasks to the
-signed-in user (`user_id` FK on the `tasks` table, `TaskRepository`/`TaskService` filter/set by
-owner, protect all task routes with `get_current_user`). Step 6 after that: frontend login/signup
-forms, store the token, attach `Authorization: Bearer` to every fetch, gate the UI when logged
-out. Also still owed from before this session: walk her through the AWS Cloud Fundamentals +
-Kubernetes course handoff (see the "New this session — heads up" section above) — she asked to
-defer it again, still not done. Also worth a proactive mention: `TagRepository`/`TaskTagRepository`
-are still in-memory (only `TaskRepository` got Postgres-backed) — tags and task-tag attachments
-don't survive a backend restart, only tasks do.
+**Next action:** NEXT_STEPS Path A1 (Authentication) is fully complete. Ask if she wants to commit
+the auth work (`backend/app.py`, `backend/postgres_task_repository.py`,
+`backend/postgres_user_repository.py`, `backend/db.py`, `backend/requirements.txt`,
+`frontend/src/App.tsx`, `frontend/src/Login.tsx`, `frontend/src/Signup.tsx`) — still uncommitted
+as of end of this session. After that, her choice from the remaining NEXT_STEPS.md paths (A3
+deploy, B portfolio polish, C interview prep, D Docker volumes/K8s primer) — note she also has a
+separate AWS Cloud Fundamentals + Kubernetes course available at `~/aws-fundamentals` (own
+terminal/session), already handed off to her. Also worth a proactive mention: `TagRepository`/
+`TaskTagRepository` are still in-memory (only `TaskRepository` got Postgres-backed) — tags and
+task-tag attachments don't survive a backend restart, only tasks do.
 
 ## Milestone checklist
 
@@ -139,6 +119,8 @@ don't survive a backend restart, only tasks do.
 - [x] Stretch — Postgres + SQLAlchemy persistence (real Postgres-backed `TaskRepository`,
       DI-swapped in with zero route/service changes, persistence proven via `db off`/`db on`)
 - [x] NEXT_STEPS Path A2 — Tags (many-to-many), backend + frontend both complete
+- [x] NEXT_STEPS Path A1 — Authentication (JWT login/signup, protected routes, tasks scoped to
+      owner, frontend login/signup/logout), backend + frontend both complete
 
 ## Session log
 
@@ -394,3 +376,34 @@ jose import JWTError`, no separate `jwt` package installed) plus a `GET /me` pro
 Verified live: valid token → user, no token → 401, garbage token → 401. Paused before Step 5
 (scoping tasks to the owner) at her request. Nothing committed this session — she hasn't asked
 yet.
+2026-08-25 — New session, resumed after context compaction. Walked her through the AWS Cloud
+Fundamentals + Kubernetes course handoff (separate repo at `~/aws-fundamentals`, own terminal/
+session) — she chose to finish A1 (Authentication) first instead. Completed Step 5 (scope tasks to
+signed-in user): added `user_id` FK column to `tasks` in `db.py` (`ForeignKey("users.id")`,
+correlated to JPA's raw-FK-column vs. `@ManyToOne` object-reference choice — went with the raw
+column since nothing needs a hydrated owner object); hit the same create_all()-doesn't-ALTER issue
+as the `users` table last session, self-diagnosed it correctly this time, dropped `tasks` via psql
+and restarted. Threaded `user_id` through `PostgresTaskRepository` (`add`/`get`/`list`/`update`/
+`delete`, all filtering by both `id` and `user_id` via chained `.filter()` so a wrong owner gets an
+identical 404 to a nonexistent task — her own call, consistent with last session's login-enumeration
+reasoning) — caught a `user_id=task.user_id` bug (no `task` variable in scope, meant the new
+`user_id` param) and an `if db_task in None` typo. `TaskService` and all seven task routes
+(including `attach_tag`/`detach_tag`, which also needed the repository's new `get(task_id,
+user_id)` signature) threaded `current_user.id` from `Depends(get_current_user)` — she wrote all
+seven correctly first try, including argument order matching the repository signatures. Verified
+live via curl with two real users: cross-user GET/DELETE by task ID both 404, list only shows own
+tasks, owner PUT succeeds. Step 6 (frontend): built `Login.tsx`/`Signup.tsx` (controlled inputs,
+same shape as `AddTaskForm`, caught a `type="text"` password field and an unwired `onLogin` call
+initially just doing `console.log`); wired `handleLogin` (new syntax: `URLSearchParams` +
+`application/x-www-form-urlencoded`, since `/login` uses `OAuth2PasswordRequestForm` not JSON) and
+`handleSignup` (caught it copying the form-encoded pattern from login instead of JSON — `/user`
+takes a plain `UserCreate` body); lazy `useState(() => localStorage.getItem('token'))` for token
+init (new syntax, no real Java correlate); added `Authorization: Bearer` headers to all seven
+existing fetch calls (self-added correctly across the whole file in one pass) and `[token]`-gated
+early-return guards on both mount-time `useEffect`s so they don't fire before login; ternary-gated
+the whole app render (`LoginForm`/`SignupForm` vs. the task UI) and a `handleLogout` clearing both
+`localStorage` and state. Verified live in the browser end-to-end: logged-out shows login/signup,
+signup auto-logs-in, add/toggle/tag a task, logout returns to login screen, logging back in shows
+the same task still there. NEXT_STEPS Path A1 (Authentication) is now fully complete, backend and
+frontend. Nothing committed this session — still owed, not yet asked for. Next: her choice — commit
+the auth work, or pick another NEXT_STEPS path (A3/B/C/D), or the separate AWS course.
