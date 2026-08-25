@@ -30,9 +30,9 @@ class PostgresTaskRepository:
                 tasks_list.append(Task(id=db_task.id, title=db_task.title, completed=db_task.completed, priority=db_task.priority, user_id=db_task.user_id))
             return tasks_list
     
-    def update(self, task_id: int, task_update: TaskUpdate) -> Task | None:
+    def update(self, task_id: int, user_id: int, task_update: TaskUpdate) -> Task | None:
         with db.SessionLocal() as session:
-            db_task = session.get(db.Task, task_id)
+            db_task = session.query(db.Task).filter(db.Task.id==task_id, db.Task.user_id==user_id ).first()
             if db_task is None:
                 return None
             updates = task_update.model_dump(exclude_unset=True)
@@ -42,11 +42,11 @@ class PostgresTaskRepository:
             session.commit()
             session.refresh(db_task)
 
-            return Task(id=db_task.id, title=db_task.title, completed=db_task.completed, priority=db_task.priority)
+            return Task(id=db_task.id, title=db_task.title, completed=db_task.completed, priority=db_task.priority, user_id= db_task.user_id)
 
-    def delete(self, task_id: int) -> bool:
+    def delete(self, task_id: int, user_id: int) -> bool:
         with db.SessionLocal() as session:
-            db_task = session.get(db.Task, task_id)
+            db_task = session.query(db.Task).filter(db.Task.id==task_id, db.Task.user_id==user_id ).first()
             if db_task is None:
                 return False
 
