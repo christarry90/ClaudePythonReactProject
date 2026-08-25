@@ -35,7 +35,6 @@ class UserInDb(BaseModel):
     username: str
     hashed_password: str
 
-
 class Tag(BaseModel):
     id: int
     name: str
@@ -49,6 +48,7 @@ class Task(BaseModel):
     completed: bool = False
     priority: Literal["low", "medium", "high"] = "medium"
     tags: list[Tag] = []
+    user_id: int
 
 class TaskCreate(BaseModel):
     title: str

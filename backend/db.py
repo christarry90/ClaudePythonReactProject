@@ -1,4 +1,4 @@
-from sqlalchemy import Boolean, String
+from sqlalchemy import Boolean, String, ForeignKey
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 import os
 from dotenv import load_dotenv
@@ -17,6 +17,7 @@ class Task(Base):
     title: Mapped[str] = mapped_column(String(100))
     completed: Mapped[bool] = mapped_column(Boolean)
     priority: Mapped[str] = mapped_column(String(25))
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
 
 class User(Base):
     __tablename__ = "users"
