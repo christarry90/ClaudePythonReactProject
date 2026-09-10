@@ -1,0 +1,23 @@
+{
+  "version": "2.0",
+  "routeKey": "POST /user",
+  "rawPath": "/user",
+  "rawQueryString": "",
+  "headers": {
+    "host": "localhost",
+    "content-type": "application/json"
+  },
+  "requestContext": {
+    "http": {
+      "method": "POST",
+      "path": "/user",
+      "protocol": "HTTP/1.1",
+      "sourceIp": "127.0.0.1",
+      "userAgent": "test"
+    },
+    "domainName": "localhost",
+    "stage": "$default"
+  },
+  "body": "{\"username\": \"testuser\", \"password\": \"testpass123\"}",
+  "isBase64Encoded": false
+}

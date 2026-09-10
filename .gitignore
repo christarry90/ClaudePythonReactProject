@@ -17,3 +17,7 @@ core.[0-9]*
 # Local-only infra/debugging notes (see TUTOR_PROMPT.md Session protocol) — never pushed
 ENVIRONMENT_LOG.md
 .env
+# Lambda deploy build artifacts (regenerate via pip install -t + zip, not committed)
+backend/package/
+backend/function.zip
+backend/response.json
